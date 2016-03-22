@@ -7,17 +7,15 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Html;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.altbeacon.beacon.BeaconConsumer;
-import org.altbeacon.beacon.distance.CurveFittedDistanceCalculator;
-import org.altbeacon.beacon.distance.DistanceCalculator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +31,10 @@ public class MapActivity extends Activity implements View.OnClickListener, Beaco
     private Button btn_Start;
     private Button btn_Test;
     private Button btn_ShowBeaconPoint;
+    private Button btn_setTxPower;
+    private Button btn_setN;
+    private EditText edt_TxPower;
+    private EditText edt_N;
     private TextView tv_Legend;
     private List<BLE> mBLEs = new ArrayList<BLE>();
     private int[] colors = {ChartUtils.COLORS[0], ChartUtils.COLORS[1], ChartUtils.COLORS[2], ChartUtils.COLORS[3], ChartUtils.COLORS[4], Color.BLUE, Color.BLACK, Color.GREEN, Color.RED, Color.GRAY, Color.DKGRAY};
@@ -40,13 +42,40 @@ public class MapActivity extends Activity implements View.OnClickListener, Beaco
     private boolean clearMessage = false;
     private LinearLayout linearLayout;
     private MyView myView;
-    private CurveFittedDistanceCalculator curveFittedDistanceCalculator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         init();
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        bluetoothAdapter.stopLeScan(leScanCallback);
+    }
+    private void init() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        btn_Start = (Button) findViewById(R.id.btn_Start);
+        btn_ShowBeaconPoint = (Button) findViewById(R.id.btn_showbeacon);
+        btn_Test = (Button) findViewById(R.id.btn_ShowDB);
+        btn_setTxPower = (Button) findViewById(R.id.btn_setTxPower);
+        btn_setN = (Button) findViewById(R.id.btn_setN);
+
+        btn_Start.setOnClickListener(this);
+        btn_ShowBeaconPoint.setOnClickListener(this);
+        btn_Test.setOnClickListener(this);
+        btn_setTxPower.setOnClickListener(this);
+        btn_setN.setOnClickListener(this);
+
+        edt_TxPower = (EditText) findViewById(R.id.edt_txPower);
+        edt_N = (EditText) findViewById(R.id.edt_n);
+
+        tv_Legend = (TextView) findViewById(R.id.tv_Legend);
+
+        myView = (MyView) findViewById(R.id.myview);
+        setMapSize();
+        myView.setBitmap(R.drawable.img_map);
     }
 
     @Override
@@ -72,8 +101,17 @@ public class MapActivity extends Activity implements View.OnClickListener, Beaco
                 myView.addBeaconPoint("06(2,5)", myView.getWidth() / 10 * 2, myView.getHeight() / 10 * 5);
                 myView.addBeaconPoint("07(8,3)", myView.getWidth() / 10 * 8, myView.getHeight() / 10 * 3);
                 break;
-            case R.id.btn_Test:
-                Log.d("Test", "" + curveFittedDistanceCalculator.calculateDistance(-59, -70));
+            case R.id.btn_ShowDB:
+                break;
+            case R.id.btn_setTxPower:
+                for (BLE ble : mBLEs) {
+                    ble.setTxPower(Integer.parseInt(edt_TxPower.getText().toString()));
+                }
+                break;
+            case R.id.btn_setN:
+                for (BLE ble : mBLEs) {
+                    ble.setN(Float.parseFloat(edt_N.getText().toString()));
+                }
                 break;
         }
     }
@@ -88,20 +126,6 @@ public class MapActivity extends Activity implements View.OnClickListener, Beaco
     @Override
     public void onBeaconServiceConnect() {
 
-    }
-
-    private void init() {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        btn_Start = (Button) findViewById(R.id.btn_Start);
-        btn_ShowBeaconPoint = (Button) findViewById(R.id.btn_showbeacon);
-        btn_Test = (Button) findViewById(R.id.btn_Test);
-        btn_Start.setOnClickListener(this);
-        btn_ShowBeaconPoint.setOnClickListener(this);
-        btn_Test.setOnClickListener(this);
-        tv_Legend = (TextView) findViewById(R.id.tv_Legend);
-        myView = (MyView) findViewById(R.id.myview);
-        setMapSize();
-        myView.setBitmap(R.drawable.img_map);
     }
 
     private void updateBLEList(BluetoothDevice device, int rssi) {
@@ -134,13 +158,15 @@ public class MapActivity extends Activity implements View.OnClickListener, Beaco
     }
 
     private void setLegend() {
-        Collections.sort(mBLEs);
+//        Collections.sort(mBLEs);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 String str = "";
                 for (BLE ble : mBLEs) {
-                    str += "<font color=" + ble.getColor() + ">" + ble.mDevice.getName() + " " + ble.getLastRssi() + "     Variance:" + String.format("%.2f", ble.getVariance()) + "</font><br>";
+                    if (ble.isEnabled()) {
+                        str += String.format("<font color=%d>%s %d  Variance:%.2f  Distance:%.2f</font><br>", ble.getColor(), ble.mDevice.getName(), ble.getLastRssi(), ble.getVariance(), ble.getDistance());
+                    }
                 }
                 tv_Legend.setText(Html.fromHtml(str));
             }

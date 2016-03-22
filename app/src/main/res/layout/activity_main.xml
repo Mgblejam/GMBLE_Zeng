@@ -1,73 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.thesamespace.gmble_zeng.MainActivity">
+    android:fitsSystemWindows="true"
+    tools:openDrawer="start">
 
 
-    <ImageView
-        android:id="@+id/imageview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:scaleType="fitXY"
-        android:src="@drawable/img2" />
-
-    <TextView
-        android:id="@+id/textview"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:layout_margin="20dp"
-        android:gravity="center"
-        android:text="No Beacon"
-        android:textColor="#bc1111"
-        android:textSize="50dp" />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textview2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="20dp"
-        android:background="#ffffff"
-        android:text="BLE Name"
-         />
+        <ImageView
+            android:id="@+id/imageview"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:alpha="0.3"
+            android:scaleType="fitCenter"
+            android:src="@drawable/magicwiselogo" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="10dp"
-        android:gravity="right">
-
-        <Button
-            android:id="@+id/button"
+        <TextView
+            android:id="@+id/tv_userName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Start" />
+            android:layout_margin="20dp"
+            android:alpha="0.8"
+            android:background="#7e7e7e"
+            android:paddingBottom="5dp"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:paddingTop="5dp"
+            android:text="User:No User"
+            android:textColor="#ffffff"
+            android:textSize="30dp" />
 
-        <Button
-            android:id="@+id/button2"
+        <TextView
+            android:id="@+id/tv_welcome"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="30dp"
+            android:alpha="0.8"
+            android:background="#292929"
+            android:gravity="center"
+            android:text="Welcome UserName"
+            android:textColor="#d7d7d7"
+            android:textSize="70dp"
+            android:textStyle="bold"
+            android:typeface="sans"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/textview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:layout_marginTop="100dp"
+            android:alpha="0.8"
+            android:background="#292929"
+            android:fontFamily="@string/abc_action_bar_up_description"
+            android:gravity="center"
+            android:text=""
+            android:textColor="#d7d7d7"
+            android:textSize="50dp"
+            android:textStyle="bold"
+            android:typeface="sans"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/textview2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Stop" />
+            android:layout_gravity="bottom"
+            android:layout_margin="20dp"
+            android:alpha="0.8"
+            android:background="#2a2a2a"
+            android:text="BLE Name"
+            android:textColor="#f9f9f9"
+            android:visibility="invisible" />
 
-        <EditText
-            android:id="@+id/edittext"
-            android:layout_width="50dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="-66"
-            android:textColor="#bc1111"
+            android:layout_gravity="bottom"
+            android:layout_margin="10dp"
             android:focusable="true"
-            android:focusableInTouchMode="true" />
+            android:focusableInTouchMode="true"
+            android:gravity="right">
 
-        <Button
-            android:id="@+id/button3"
+            <Button
+                android:id="@+id/btn_Start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.6"
+                android:text="Start"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btn_SetMiniTimes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.8"
+                android:text="Setting"
+                android:visibility="invisible" />
+
+            <EditText
+                android:id="@+id/edt_miniTimes"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:alpha="0.8"
+                android:autoText="false"
+                android:background="#2a2a2a"
+                android:enabled="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:text="20"
+                android:textColor="#fff"
+                android:visibility="invisible" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Setting" />
+            android:layout_gravity="left|top"
+            android:visibility="gone" />
+    </FrameLayout>
 
-    </LinearLayout>
-
-</FrameLayout>
+    <android.support.design.widget.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="false"
+        app:headerLayout="@layout/activity_navheader"
+        app:menu="@layout/activity_mainmenudrawer"></android.support.design.widget.NavigationView>
+</android.support.v4.widget.DrawerLayout>

@@ -6,12 +6,31 @@
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center">
+        android:layout_height="wrap_content">
 
-        <ImageView
-            android:layout_width="300dp"
-            android:layout_height="300dp"
-            android:src="@drawable/img1" />
+        <Button
+            android:id="@+id/btn_rssiToDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="rssiToDistance" />
+
+        <EditText
+            android:id="@+id/edt_rssi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-73" />
+
+        <EditText
+            android:id="@+id/edt_txPower"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-60" />
+
+        <EditText
+            android:id="@+id/edt_n"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0.3" />
     </LinearLayout>
+
 </LinearLayout>

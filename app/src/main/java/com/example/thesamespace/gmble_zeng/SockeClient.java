@@ -92,8 +92,4 @@ public class SockeClient {
             e.printStackTrace();
         }
     }
-
-    private  void  test(){
-
-    }
 }

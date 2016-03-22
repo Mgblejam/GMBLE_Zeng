@@ -62,7 +62,7 @@ public class SockeClient {
     public void connectServer(final String serverIP, final int port, final String ID) {
         if (socket.isClosed())
             socket = new Socket();
-        if (socket.isConnected() == false) {
+        if (!socket.isConnected() ) {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -91,5 +91,9 @@ public class SockeClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private  void  test(){
+
     }
 }

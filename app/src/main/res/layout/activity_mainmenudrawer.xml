@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_start"
+            android:icon="@drawable/magnifier"
+            android:title="Start" />
+
+        <item
+            android:id="@+id/nav_debug"
+            android:icon="@drawable/debug"
+            android:title="EnterDebugMode" />
+
+        <item
+            android:id="@+id/nav_chartTest"
+            android:icon="@drawable/chart"
+            android:title="ChartTest" />
+
+        <!-- <item
+             android:id="@+id/nav_mapTest"
+             android:icon="@drawable/location"
+             android:title="MapTest" />-->
+
+        <item
+            android:id="@+id/nav_exit"
+            android:icon="@drawable/exit"
+            android:title="Exit" />
+    </group>
+</menu>

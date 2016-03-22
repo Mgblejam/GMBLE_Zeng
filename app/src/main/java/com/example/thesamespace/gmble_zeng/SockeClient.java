@@ -62,7 +62,7 @@ public class SockeClient {
     public void connectServer(final String serverIP, final int port, final String ID) {
         if (socket.isClosed())
             socket = new Socket();
-        if (!socket.isConnected() ) {
+        if (!socket.isConnected()) {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {

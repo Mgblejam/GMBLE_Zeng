@@ -74,7 +74,14 @@
             android:visibility="invisible" />
 
         <TextView
-            android:id="@+id/textview2"
+            android:id="@+id/tv_chatMessage"
+            android:layout_gravity="bottom"
+            android:layout_margin="10dp"
+            android:layout_width="300dp"
+            android:layout_height="200dp" />
+
+        <TextView
+            android:id="@+id/tv_bleList"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"

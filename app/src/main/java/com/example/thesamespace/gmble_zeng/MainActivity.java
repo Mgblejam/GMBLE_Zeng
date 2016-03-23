@@ -1,6 +1,5 @@
 package com.example.thesamespace.gmble_zeng;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -25,26 +24,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
 public class MainActivity extends Activity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener {
+    private String IP = "10.0.0.13";
+    private int Port = 9999;
     private Button btn_Start;
     private Button btn_SetMiniRssi;
     private EditText edt_miniRssi;
@@ -52,6 +48,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private TextView tv_BLEList;
     private TextView tv_userName;
     private TextView tv_welcome;
+    private TextView tv_chatMessage;
     private ImageView imageView;
     private BluetoothAdapter mBluetoothAdapter;
     private List<BLE> mBLEs = new ArrayList<BLE>();
@@ -71,8 +68,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private List<Socket> mList = new ArrayList<Socket>();
     private static final int LOGIN = 1;
     private static final int LOGOUT = 2;
-    //    private ServerThread serverThread;
-    private SockeClient sockeClient = new SockeClient();
+//    private SocketClient socketClient = new SocketClient();
+    private Socket socket;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,38 +106,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
 //        };
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        menu.add(1, ChartTest, 1, "ChartTest");
-//        menu.add(1, MapTest, 2, "MapTest");
-//        menu.add(1, SQLiteTest, 3, "SQLiteTest");
-//        menu.add(1, FunctionTest, 4, "FunctionTest");
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up btn_Start, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        switch (item.getItemId()) {
-//            case ChartTest:
-//                startActivity(new Intent(MainActivity.this, ChartTestActivity.class));
-//                break;
-//            case MapTest:
-//                startActivity(new Intent(MainActivity.this, MapActivity.class));
-//                break;
-//            case SQLiteTest:
-//                startActivity(new Intent(MainActivity.this, SQLiteActivity.class));
-//                break;
-//            case FunctionTest:
-//                startActivity(new Intent(MainActivity.this, TestActivity.class));
-//                break;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-
     private void init() {
         btn_Start = (Button) findViewById(R.id.btn_Start);
         btn_SetMiniRssi = (Button) findViewById(R.id.btn_SetMiniTimes);
@@ -151,9 +116,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
         edt_miniRssi = (EditText) findViewById(R.id.edt_miniTimes);
 
         textView = (TextView) findViewById(R.id.textview);
-        tv_BLEList = (TextView) findViewById(R.id.textview2);
+        tv_BLEList = (TextView) findViewById(R.id.tv_bleList);
         tv_userName = (TextView) findViewById(R.id.tv_userName);
         tv_welcome = (TextView) findViewById(R.id.tv_welcome);
+        tv_chatMessage = (TextView) findViewById(R.id.tv_chatMessage);
 
         imageView = (ImageView) findViewById(R.id.imageview);
 
@@ -216,6 +182,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                     tv_BLEList.setVisibility(View.VISIBLE);
                     btn_SetMiniRssi.setVisibility(View.VISIBLE);
                     edt_miniRssi.setVisibility(View.VISIBLE);
+                    tv_chatMessage.setVisibility(View.VISIBLE);
                     Toast.makeText(MainActivity.this, "EnterDebugMode", Toast.LENGTH_SHORT).show();
                 } else {
                     item.setTitle("EnterDebugMode");
@@ -223,6 +190,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                     tv_BLEList.setVisibility(View.INVISIBLE);
                     btn_SetMiniRssi.setVisibility(View.INVISIBLE);
                     edt_miniRssi.setVisibility(View.INVISIBLE);
+                    tv_chatMessage.setVisibility(View.INVISIBLE);
                     Toast.makeText(MainActivity.this, "ExitDebugMode", Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -250,22 +218,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                 Collections.sort(mBLEs);
                 showBLEList();
                 showNearestBLE();
-            }
-        }
-    };
-
-    public SockeClient.ListenCallBack listenCallBack = new SockeClient.ListenCallBack() {
-        @Override
-        public void onListen(String receiveString) {
-            Log.d("receiveString", receiveString);
-            String[] data = receiveString.split(",");
-            switch (data[0]) {
-                case "Login":
-                    login(data[1].toString(), data[2]);
-                    break;
-                case "Logout":
-                    logout();
-                    break;
             }
         }
     };
@@ -434,6 +386,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                 });
             }
         }.start();
+        mBluetoothAdapter.startLeScan(mLeScanCallback);
     }
 
     private void logout() {
@@ -469,129 +422,72 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                 });
             }
         }.start();
+        mBluetoothAdapter.stopLeScan(mLeScanCallback);
     }
 
     private void start() {
-        sockeClient.connectServer("10.0.0.30", 9999, "01");
-        sockeClient.startListen(listenCallBack);
-//        serverThread = new ServerThread();
-//        flag = true;
-//        serverThread.start();
-//         login();
-//         mBluetoothAdapter.startLeScan(mLeScanCallback);
+        ShowMsg("连接服务器");
+        connect(IP, Port);
     }
 
     private void Stop() {
         logout();
-        sockeClient.disconnect();
+        ShowMsg("断开连接");
+        disConnect();
     }
 
-    class ServerThread extends Thread {
-        public void stopServer() {
-            try {
-                if (server != null) {
-                    server.close();
-                    System.out.println("close task successed");
-                }
-            } catch (IOException e) {
-                System.out.println("close task failded");
-            }
-        }
-
-        public void run() {
-            try {
-                server = new ServerSocket(PORT);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                System.out.println("S2: Error");
-                e1.printStackTrace();
-            }
-            mExecutorService = Executors.newCachedThreadPool(); // 创建一个线程池
-            System.out.println("Start server...");
-            Socket client = null;
-            while (flag) {
+    private void connect(final String IP, final int port) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                socket = new Socket();
                 try {
-                    client = server.accept();
-                    System.out.println("accept");
-                    // 把客户端放入客户端集合中
-                    mList.add(client);
-                    mExecutorService.execute(new Service(client)); // 启动一个新的线程来处理连接
-                } catch (IOException e) {
-                    System.out.println("S1: Error");
-                    e.printStackTrace();
-                }
-            }
-
-        }
-    }
-
-    // 处理与client对话的线程
-    class Service implements Runnable {
-        DataInputStream in;
-        DataOutputStream out;
-        Socket socket;
-
-        public Service(Socket socket) {
-            try {
-                this.socket = socket;
-                in = new DataInputStream(socket.getInputStream());
-                out = new DataOutputStream(socket.getOutputStream());
-            } catch (Exception ex) {
-                System.out.println(ex.toString());
-            }
-        }
-
-        public void run() {
-            while (true) {
-                try {
-                    String getdata = getRequestData();
-                    System.out.println("get:  " + getdata);
-                    String[] r_data = getdata.split("\\|");
-                    Message msgLocal = new Message();
-                    if (r_data[0].equals("LI")) {
-                        msgLocal.what = LOGIN;
-                        msgLocal.obj = r_data[1];
-                        System.out.println(msgLocal.obj.toString());
-                        System.out.println(getdata);
-                        myHandler.sendMessage(msgLocal);
-                        break;
-
-                    } else if (r_data[0].equals("LO")) {
-                        msgLocal.what = LOGOUT;
-                        msgLocal.obj = r_data[1];
-                        System.out.println(msgLocal.obj.toString());
-                        System.out.println(getdata);
-                        myHandler.sendMessage(msgLocal);
-                        break;
-                    } else if (getdata.equals("ok\r\n")) {
-                        mList.remove(socket);
-                        in.close();
-                        socket.close();
-                        break;
+                    socket.connect(new InetSocketAddress(IP, port), 5000);
+                    InputStream is = socket.getInputStream();
+                    while (true) {
+                        int length;
+                        do {
+                            length = is.available();
+                        } while (length == 0);
+                        byte[] bytes = new byte[length];
+                        is.read(bytes);
+                        onRecv(new String(bytes, "gbk"));
                     }
-
                 } catch (IOException e) {
-                    System.out.println("close");
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
+        }).start();
+    }
+
+    private void disConnect(){
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        private String getRequestData() throws IOException {
-            byte[] buffer = new byte[1024];
-            String getdata = "";
-            int in_data = in.read(buffer);
+    private void onRecv(String receiveString) {
+        String[] data = receiveString.split(",");
+        switch (data[0]) {
+            case "Login":
+                login(data[1].toString(), "");
+                break;
+            case "Logout":
+                logout();
+                break;
+        }
+        ShowMsg(receiveString);
+    }
 
-            for (byte b : buffer) {
-                if (b != 0) {
-                    getdata += (char) b;
-                }
+    private void ShowMsg(final String str) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tv_chatMessage.append(str + "\n");
             }
-            return getdata;
-
-        }
-
+        });
     }
 }
 

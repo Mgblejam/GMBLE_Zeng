@@ -6,12 +6,10 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -24,8 +22,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -35,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 
 public class MainActivity extends Activity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener {
@@ -115,7 +110,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
 
         edt_miniRssi = (EditText) findViewById(R.id.edt_miniTimes);
 
-        textView = (TextView) findViewById(R.id.textview);
+        textView = (TextView) findViewById(R.id.tv_rssiList);
         tv_BLEList = (TextView) findViewById(R.id.tv_bleList);
         tv_userName = (TextView) findViewById(R.id.tv_userName);
         tv_welcome = (TextView) findViewById(R.id.tv_welcome);
@@ -197,9 +192,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             case R.id.nav_chartTest:
                 startActivity(new Intent(MainActivity.this, ChartTestActivity.class));
                 break;
-            /*case R.id.nav_mapTest:
-                startActivity(new Intent(MainActivity.this, MapActivity.class));
-                break;*/
+            case R.id.nav_mapTest:
+                startActivity(new Intent(MainActivity.this, SQLiteActivity.class));
+                break;
             case R.id.nav_exit:
                 android.os.Process.killProcess(android.os.Process.myPid());
                 System.exit(0);

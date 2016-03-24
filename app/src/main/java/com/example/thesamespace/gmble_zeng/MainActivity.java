@@ -458,6 +458,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private void disConnect(){
         try {
             socket.close();
+            socket.shutdownInput();
+            socket.shutdownOutput();
         } catch (IOException e) {
             e.printStackTrace();
         }

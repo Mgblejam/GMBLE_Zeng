@@ -24,6 +24,7 @@ public class BLE implements Comparable<Object> {
     private double distance = 0;
     private int txPower = -59;
     private float n = 0.3f;
+    private String rssiStr="";
 
     public BLE(BluetoothDevice device, int rssi) {
         this.mDevice = device;
@@ -54,6 +55,7 @@ public class BLE implements Comparable<Object> {
         this.rssiList.add(rssi);
         this.rssiLastAVG += (rssi - this.rssiLastAVG) * 0.1f;
         this.rssiAVGList.add(rssiLastAVG);
+        rssiStr+=rssi+",";
         rssiSum += rssi;
     }
 
@@ -71,7 +73,7 @@ public class BLE implements Comparable<Object> {
 //        Double i = new Double(mble.variance);
 //        return i.compareTo(this.variance);
 
-        Float i =new Float(mble.rssiLastAVG);
+        Float i = new Float(mble.rssiLastAVG);
         return i.compareTo(this.rssiLastAVG);
     }
 
@@ -140,5 +142,9 @@ public class BLE implements Comparable<Object> {
 
     public Float getRssiLastAVG() {
         return this.rssiLastAVG;
+    }
+
+    public String getRssiStr() {
+        return rssiStr;
     }
 }

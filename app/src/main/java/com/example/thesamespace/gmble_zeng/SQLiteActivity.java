@@ -68,7 +68,11 @@ public class SQLiteActivity extends Activity implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.btn_Start:
                 showMsg("写入文件");
-
+                try {
+                    sdFileHelper.savaFileToSD("Test2","rssiTest.txt");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 //                ContentValues values1 = new ContentValues();
 ////                values1.put("name", "BLE02");
 //                values1.put("distance", 1);

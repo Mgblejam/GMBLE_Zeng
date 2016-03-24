@@ -3,6 +3,7 @@ package com.example.thesamespace.gmble_zeng;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +39,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private int Port = 9999;
     private Button btn_Start;
     private Button btn_SetMiniRssi;
+
     private EditText edt_miniRssi;
     private TextView textView;
     private TextView tv_BLEList;
@@ -63,7 +65,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private List<Socket> mList = new ArrayList<Socket>();
     private static final int LOGIN = 1;
     private static final int LOGOUT = 2;
-//    private SocketClient socketClient = new SocketClient();
+    //    private SocketClient socketClient = new SocketClient();
     private Socket socket;
 
     @Override
@@ -80,6 +82,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             mBluetoothAdapter.enable();
         }
         init();
+
 //        myHandler = new Handler() {
 //            @SuppressLint("HandlerLeak")
 //            public void handleMessage(Message msg) {
@@ -107,6 +110,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
 
         btn_Start.setOnClickListener(this);
         btn_SetMiniRssi.setOnClickListener(this);
+
 
         edt_miniRssi = (EditText) findViewById(R.id.edt_miniTimes);
 
@@ -151,6 +155,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                 miniTimes = Integer.parseInt(edt_miniRssi.getText().toString());
                 Toast.makeText(this, "Setting miniTimes OK", Toast.LENGTH_SHORT).show();
                 break;
+
         }
     }
 
@@ -455,7 +460,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
         }).start();
     }
 
-    private void disConnect(){
+    private void disConnect() {
         try {
             socket.close();
             socket.shutdownInput();
@@ -477,6 +482,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
         }
         ShowMsg(receiveString);
     }
+
 
     private void ShowMsg(final String str) {
         runOnUiThread(new Runnable() {

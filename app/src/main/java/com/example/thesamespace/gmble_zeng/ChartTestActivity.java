@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -44,6 +45,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
     private EditText edt_TxPower;
     private EditText edt_N;
     private TextView tv_Legend;
+    private TextView tv_rssiCount;
     private EditText edit_distance;
     private LineChartView mLineChartView;
     private BluetoothAdapter mBluetoothAdapter;
@@ -59,12 +61,15 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
     private int rssi = -60;
     private int txPower = -60;
     private float n = 0.3f;
+    private Context context;
+    private Button btn_save;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_charttest);
         init();
+        context = getApplicationContext();
     }
 
     @Override
@@ -84,6 +89,8 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         btn_setN = (Button) findViewById(R.id.btn_setN);
         btn_Test = (Button) findViewById(R.id.btn_test);
 
+        btn_save = (Button) findViewById(R.id.btn_save);
+        btn_save.setOnClickListener(this);
         btn_StartStopChart.setOnClickListener(this);
         btn_ClearChart.setOnClickListener(this);
         btn_ShowDB.setOnClickListener(this);
@@ -97,6 +104,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         edt_N = (EditText) findViewById(R.id.edt_n);
 
         tv_Legend = (TextView) findViewById(R.id.tv_Legend01);
+        tv_rssiCount = (TextView) findViewById(R.id.tv_rssiCount);
         edit_distance = (EditText) findViewById(R.id.edt_distance);
 
         mLineChartView = (LineChartView) findViewById(R.id.linechartview);
@@ -104,8 +112,8 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "No Bluetooth", Toast.LENGTH_SHORT).show();
         }
-        mySQLite = new MySQLite(this, "BLE.db", null, 2);
-        sqLiteDatabase = mySQLite.getWritableDatabase();
+//        mySQLite = new MySQLite(this, "BLE.db", null, 2);
+//        sqLiteDatabase = mySQLite.getWritableDatabase();
     }
 
     @Override
@@ -159,6 +167,9 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
                 double distance = Math.pow(10, (rssi - txPower) / -10 * n);
                 Toast.makeText(this, "" + distance, Toast.LENGTH_SHORT).show();
                 break;
+            case R.id.btn_save:
+                save();
+                break;
         }
     }
 
@@ -176,6 +187,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             updateBLEList(device, rssi);
+            showRssiCount();
 //            updateSQLite(device.getName(), distance, rssi);
         }
     };
@@ -200,7 +212,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
             createCheckBox(device.getName());
 //            mySQLite.createTable(sqLiteDatabase, device.getName());
         }
-        drawLine();
+//        drawLine();
         if (clearMessage == true) {
             clearMessage = false;
             for (BLE ble : mBLEs) {
@@ -287,6 +299,36 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         values1.put("rssi", rssi);
         //参数依次是：表名，强行插入null值得数据列的列名，一行记录的数据
         sqLiteDatabase.insert(tableName, null, values1);
+    }
+
+    private void save() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SDFileHelper sdFileHelper = new SDFileHelper(context);
+                for (BLE ble : mBLEs) {
+                    try {
+                        sdFileHelper.savaFileToSD(ble.mDevice.getName() + ".txt", ble.getRssiStr());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+
+    }
+
+    private void showRssiCount() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tv_rssiCount.setText("已收集Rssi数据数量:");
+                for (BLE ble : mBLEs) {
+                    tv_rssiCount.append("\n" + ble.mDevice.getName()+":" + ble.rssiList.size());
+                }
+            }
+        });
+
     }
 
 }

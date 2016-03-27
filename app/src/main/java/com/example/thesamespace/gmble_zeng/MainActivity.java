@@ -33,13 +33,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import setting.SettingActivity;
+import setting.SettingData;
+import socket.SocketClient;
+
 
 public class MainActivity extends Activity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener {
-    private String IP = "10.0.0.13";
-    private int Port = 9999;
+    private SettingData settingData;
     private Button btn_Start;
     private Button btn_SetMiniRssi;
-
     private EditText edt_miniRssi;
     private TextView textView;
     private TextView tv_BLEList;
@@ -56,24 +58,43 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private float curMaxRssi = 0;
     private int biggerTimes;
     private String userName = "Marry";
+    private SocketClient socketClient = new SocketClient() {
+        @Override
+        public void onListen(String receiveString) {
+            String[] data = receiveString.split(",");
+            switch (data[0]) {
+                case "Login":
+                    login(data[1].toString(), "");
+                    break;
+                case "Logout":
+                    logout();
+                    break;
+            }
+            ShowMsg(receiveString);
+        }
 
-    private Handler myHandler;
-    private volatile ServerSocket server = null;
-    private static final int PORT = 9999;
-    private ExecutorService mExecutorService = null; // 线程池
-    private volatile boolean flag = true;// 线程标志位
-    private List<Socket> mList = new ArrayList<Socket>();
-    private static final int LOGIN = 1;
-    private static final int LOGOUT = 2;
-    //    private SocketClient socketClient = new SocketClient();
-    private Socket socket;
+        @Override
+        public void onOffLine() {
+
+        }
+
+        @Override
+        public void ShowMsg(final String logMessage) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    tv_chatMessage.append(logMessage + "\n");
+                }
+            });
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setFfullScreen();
         setContentView(R.layout.activity_main);
-
+        settingData = (SettingData) getApplication();
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "No Bluetooth", Toast.LENGTH_SHORT).show();
@@ -197,8 +218,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             case R.id.nav_chartTest:
                 startActivity(new Intent(MainActivity.this, ChartTestActivity.class));
                 break;
-            case R.id.nav_mapTest:
-                startActivity(new Intent(MainActivity.this, SQLiteActivity.class));
+//            case R.id.nav_mapTest:
+//                startActivity(new Intent(MainActivity.this, SQLiteActivity.class));
+//                break;
+            case R.id.nav_setting:
+                startActivity(new Intent(MainActivity.this, SettingActivity.class));
                 break;
             case R.id.nav_exit:
                 android.os.Process.killProcess(android.os.Process.myPid());
@@ -390,6 +414,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     }
 
     private void logout() {
+        socketClient.disConnect();
         new Thread() {
             @Override
             public void run() {
@@ -427,62 +452,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
 
     private void start() {
         ShowMsg("连接服务器");
-        connect(IP, Port);
+        socketClient.connect(settingData.getIP(), settingData.getPort());
     }
 
     private void Stop() {
+        socketClient.disConnect();
         logout();
-        ShowMsg("断开连接");
-        disConnect();
     }
-
-    private void connect(final String IP, final int port) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                socket = new Socket();
-                try {
-                    socket.connect(new InetSocketAddress(IP, port), 5000);
-                    InputStream is = socket.getInputStream();
-                    while (true) {
-                        int length;
-                        do {
-                            length = is.available();
-                        } while (length == 0);
-                        byte[] bytes = new byte[length];
-                        is.read(bytes);
-                        onRecv(new String(bytes, "gbk"));
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
-    private void disConnect() {
-        try {
-            socket.close();
-            socket.shutdownInput();
-            socket.shutdownOutput();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void onRecv(String receiveString) {
-        String[] data = receiveString.split(",");
-        switch (data[0]) {
-            case "Login":
-                login(data[1].toString(), "");
-                break;
-            case "Logout":
-                logout();
-                break;
-        }
-        ShowMsg(receiveString);
-    }
-
 
     private void ShowMsg(final String str) {
         runOnUiThread(new Runnable() {

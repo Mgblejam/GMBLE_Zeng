@@ -20,10 +20,15 @@
             android:icon="@drawable/chart"
             android:title="ChartTest" />
 
-         <item
+         <!--<item
              android:id="@+id/nav_mapTest"
              android:icon="@drawable/location"
-             android:title="Text" />
+             android:title="Text" />-->
+
+        <item
+            android:id="@+id/nav_setting"
+            android:icon="@drawable/location"
+            android:title="Setting" />
 
         <item
             android:id="@+id/nav_exit"

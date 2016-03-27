@@ -10,6 +10,7 @@
 
     <application
         android:allowBackup="true"
+        android:name="setting.SettingData"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -34,6 +35,9 @@
             android:screenOrientation="landscape" />
         <activity
             android:name=".TestActivity"
+            android:screenOrientation="landscape" />
+        <activity
+            android:name="setting.SettingActivity"
             android:screenOrientation="landscape" />
     </application>
 

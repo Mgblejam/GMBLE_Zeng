@@ -1,18 +1,36 @@
 package setting;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 
 /**
  * Created by thesamespace on 2016/3/25.
  */
 public class SettingData extends Application {
-    private String IP = "10.0.0.13";
+    private SharedPreferences config;
+    private String IP = "127.0.0.1";
     private int port = 9999;
     private int timeOut = 3000;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        config = getSharedPreferences("config", MODE_PRIVATE);
+        readConfig();
+    }
+
+    private void readConfig() {
+        IP = config.getString("IP", "127.0.0.1");
+        port = config.getInt("port", 9999);
+        timeOut = config.getInt("timeOut", 1000);
+    }
+
+    public void writeConfig() {
+        SharedPreferences.Editor editor = config.edit();
+        editor.putString("IP", IP);
+        editor.putInt("port", port);
+        editor.putInt("timeOut", timeOut);
+        editor.commit();
     }
 
     public String getIP() {

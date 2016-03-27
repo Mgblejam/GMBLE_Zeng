@@ -41,6 +41,8 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         edt_ip = (EditText) findViewById(R.id.edt_ip);
         edt_port = (EditText) findViewById(R.id.edt_port);
         edt_timeOut = (EditText) findViewById(R.id.edt_timeOut);
+
+        readSetting();
     }
 
     @Override
@@ -63,5 +65,12 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         settingData.setIP(edt_ip.getText().toString());
         settingData.setPort(Integer.parseInt(edt_port.getText().toString()));
         settingData.setTimeOut(Integer.parseInt(edt_timeOut.getText().toString()));
+        settingData.writeConfig();
+    }
+
+    private void readSetting(){
+        edt_ip.setText(settingData.getIP());
+        edt_port.setText(String.valueOf(settingData.getPort()));
+        edt_timeOut.setText(String.valueOf(settingData.getTimeOut()));
     }
 }

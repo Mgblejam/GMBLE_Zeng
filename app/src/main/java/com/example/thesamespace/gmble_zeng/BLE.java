@@ -55,7 +55,7 @@ public class BLE implements Comparable<Object> {
         this.rssiList.add(rssi);
         this.rssiLastAVG += (rssi - this.rssiLastAVG) * 0.1f;
         this.rssiAVGList.add(rssiLastAVG);
-        rssiStr+=rssi+",";
+//        rssiStr+=rssi+",";
         rssiSum += rssi;
     }
 

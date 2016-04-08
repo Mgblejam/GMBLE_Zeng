@@ -35,13 +35,6 @@ import lecho.lib.hellocharts.view.LineChartView;
  */
 public class ChartTestActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private Button btn_StartStopChart;
-    private Button btn_ClearChart;
-    private Button btn_ShowDB;
-    private Button btn_ClearDB;
-    private Button btn_setting;
-    private Button btn_setTxPower;
-    private Button btn_setN;
-    private Button btn_Test;
     private EditText edt_TxPower;
     private EditText edt_N;
     private TextView tv_Legend;
@@ -58,11 +51,9 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
     private MySQLite mySQLite;
     private SQLiteDatabase sqLiteDatabase;
     private int distance = 1;
-    private int rssi = -60;
     private int txPower = -60;
     private float n = 0.3f;
     private Context context;
-    private Button btn_save;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,15 +72,15 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
     private void init() {
         linearLayout = (LinearLayout) findViewById(R.id.layout_checkboxs);
         btn_StartStopChart = (Button) findViewById(R.id.btn_StartStopChart);
-        btn_ClearChart = (Button) findViewById(R.id.btn_ClearChart);
-        btn_ShowDB = (Button) findViewById(R.id.btn_ShowDB);
-        btn_ClearDB = (Button) findViewById(R.id.btn_ClearDataBase);
-        btn_setting = (Button) findViewById(R.id.btn_setting);
-        btn_setTxPower = (Button) findViewById(R.id.btn_setTxPower);
-        btn_setN = (Button) findViewById(R.id.btn_setN);
-        btn_Test = (Button) findViewById(R.id.btn_test);
+        Button btn_ClearChart = (Button) findViewById(R.id.btn_ClearChart);
+        Button btn_ShowDB = (Button) findViewById(R.id.btn_ShowDB);
+        Button btn_ClearDB = (Button) findViewById(R.id.btn_ClearDataBase);
+        Button btn_setting = (Button) findViewById(R.id.btn_setting);
+        Button btn_setTxPower = (Button) findViewById(R.id.btn_setTxPower);
+        Button btn_setN = (Button) findViewById(R.id.btn_setN);
+        Button btn_Test = (Button) findViewById(R.id.btn_test);
 
-        btn_save = (Button) findViewById(R.id.btn_save);
+        Button btn_save = (Button) findViewById(R.id.btn_save);
         btn_save.setOnClickListener(this);
         btn_StartStopChart.setOnClickListener(this);
         btn_ClearChart.setOnClickListener(this);
@@ -164,7 +155,8 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
                 n = Float.parseFloat(edt_N.getText().toString());
                 break;
             case R.id.btn_test:
-                double distance = Math.pow(10, (rssi - txPower) / -10 * n);
+                int rssi1 = -60;
+                double distance = Math.pow(10, (rssi1 - txPower) / -10 * n);
                 Toast.makeText(this, "" + distance, Toast.LENGTH_SHORT).show();
                 break;
             case R.id.btn_save:
@@ -187,7 +179,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             updateBLEList(device, rssi);
-            showRssiCount();
+//            showRssiCount();
 //            updateSQLite(device.getName(), distance, rssi);
         }
     };
@@ -212,7 +204,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
             createCheckBox(device.getName());
 //            mySQLite.createTable(sqLiteDatabase, device.getName());
         }
-//        drawLine();
+        drawLine();
         if (clearMessage == true) {
             clearMessage = false;
             for (BLE ble : mBLEs) {
@@ -262,7 +254,7 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
     }
 
     private void setLegend() {
-        Collections.sort(mBLEs);
+//        Collections.sort(mBLEs);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

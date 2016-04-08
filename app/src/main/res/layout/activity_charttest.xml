@@ -24,6 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
+            android:visibility="invisible"
             android:text="已收集的Rssi数量：" />
 
         <LinearLayout

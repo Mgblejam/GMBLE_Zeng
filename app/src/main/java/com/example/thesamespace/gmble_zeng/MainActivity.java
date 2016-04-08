@@ -3,10 +3,8 @@ package com.example.thesamespace.gmble_zeng;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -23,15 +21,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import setting.SettingActivity;
 import setting.SettingData;
@@ -88,6 +80,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             });
         }
     };
+    private String[] BLENames = new String[]{"MAGICWISE00005", "MAGICWISE00006", "MAGICWISE00007"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,26 +96,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             mBluetoothAdapter.enable();
         }
         init();
-
-//        myHandler = new Handler() {
-//            @SuppressLint("HandlerLeak")
-//            public void handleMessage(Message msg) {
-//                switch (msg.what) {
-//                    case LOGIN:
-//                        userName = msg.obj.toString();
-//                        Log.d("test", userName);
-//                        login();
-//                        mBluetoothAdapter.startLeScan(mLeScanCallback);
-//                        break;
-//                    case LOGOUT:
-//                        logout();
-//                        Toast.makeText(MainActivity.this, "LOGOUT", Toast.LENGTH_SHORT).show();
-//                        mBluetoothAdapter.stopLeScan(mLeScanCallback);
-//                        mBLEs.clear();
-//                        break;
-//                }
-//            }
-//        };
     }
 
     private void init() {
@@ -237,7 +210,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (device.getName().equals("MAGICWISE00001") || device.getName().equals("MAGICWISE00002") || device.getName().equals("MAGICWISE00003")) {
+            if (device.getName().equals(BLENames[0]) || device.getName().equals(BLENames[1]) || device.getName().equals(BLENames[2])) {
                 updateBLEList(device, rssi);
                 Collections.sort(mBLEs);
                 showBLEList();
@@ -318,13 +291,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
         switch (userName) {
             case "Marry":
                 switch (BLEname) {
-                    case "MAGICWISE00001":
+                    case "MAGICWISE00005":
                         imageView.setImageResource(R.drawable.img11);
                         break;
-                    case "MAGICWISE00002":
+                    case "MAGICWISE00006":
                         imageView.setImageResource(R.drawable.img12);
                         break;
-                    case "MAGICWISE00003":
+                    case "MAGICWISE00007":
                         imageView.setImageResource(R.drawable.img13);
                         break;
                 }
@@ -451,7 +424,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     }
 
     private void start() {
-        ShowMsg("连接服务器");
+        printLog("连接服务器");
         socketClient.connect(settingData.getIP(), settingData.getPort());
     }
 
@@ -460,7 +433,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
         logout();
     }
 
-    private void ShowMsg(final String str) {
+    private void printLog(final String str) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

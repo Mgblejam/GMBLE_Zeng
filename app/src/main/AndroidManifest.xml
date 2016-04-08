@@ -39,6 +39,9 @@
         <activity
             android:name="setting.SettingActivity"
             android:screenOrientation="landscape" />
+        <activity
+            android:name="setting.ServerSettingActivity"
+            android:screenOrientation="landscape" />
     </application>
 
 </manifest>

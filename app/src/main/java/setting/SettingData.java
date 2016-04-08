@@ -30,7 +30,7 @@ public class SettingData extends Application {
         editor.putString("IP", IP);
         editor.putInt("port", port);
         editor.putInt("timeOut", timeOut);
-        editor.commit();
+        editor.apply();
     }
 
     public String getIP() {

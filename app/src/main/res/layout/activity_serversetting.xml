@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableRow android:layout_margin="10dp">
+
+            <TextView
+                android:gravity="right"
+                android:text="Server IP:" />
+
+            <EditText
+                android:id="@+id/edt_serverIP"
+                android:layout_weight="1"
+                android:digits="1234567890." />
+        </TableRow>
+
+        <TableRow android:layout_margin="10dp">
+
+            <TextView
+                android:gravity="right"
+                android:text="Port:" />
+
+            <EditText
+                android:id="@+id/edt_port"
+                android:layout_weight="1"
+                android:inputType="number" />
+        </TableRow>
+
+        <TableRow android:layout_margin="10dp">
+
+            <TextView
+                android:gravity="right"
+                android:text="Time Out:" />
+
+            <EditText
+                android:id="@+id/edt_timeOut"
+                android:layout_weight="1"
+                android:inputType="number" />
+
+            <TextView android:text="ms" />
+        </TableRow>
+    </TableLayout>
+</LinearLayout>

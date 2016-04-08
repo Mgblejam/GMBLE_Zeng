@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import setting.SettingActivity;
+import setting.SettingActivity2;
 import setting.SettingData;
 import socket.SocketClient;
 

@@ -73,5 +73,6 @@ public class ServerSettingActivity extends AppCompatActivity implements View.OnC
         settingData.setIP(edt_serverIP.getText().toString());
         settingData.setPort(Integer.parseInt(edt_port.getText().toString()));
         settingData.setTimeOut(Integer.parseInt(edt_timeOut.getText().toString()));
+        settingData.saveConfig();
     }
 }

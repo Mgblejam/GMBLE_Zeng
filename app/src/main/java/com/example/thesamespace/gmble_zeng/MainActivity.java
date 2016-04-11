@@ -26,16 +26,12 @@ import java.util.Collections;
 import java.util.List;
 
 import setting.SettingActivity;
-import setting.SettingActivity2;
 import setting.SettingData;
 import socket.SocketClient;
 
 
-public class MainActivity extends Activity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends Activity implements NavigationView.OnNavigationItemSelectedListener {
     private SettingData settingData;
-    private Button btn_Start;
-    private Button btn_SetMiniRssi;
-    private EditText edt_miniRssi;
     private TextView textView;
     private TextView tv_BLEList;
     private TextView tv_userName;
@@ -57,7 +53,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             String[] data = receiveString.split(",");
             switch (data[0]) {
                 case "Login":
-                    login(data[1].toString(), "");
+                    login(data[1], "");
                     break;
                 case "Logout":
                     logout();
@@ -83,6 +79,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     };
     private String[] BLENames = new String[]{"MAGICWISE00005", "MAGICWISE00006", "MAGICWISE00007"};
 
+    private List<BLEData> bleDataList = new ArrayList<>();
+    private MyLeScaner myLeScaner = new MyLeScaner() {
+        @Override
+        protected void mOnLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            updateRssiAVG(device.getName(), rssi);
+        }
+
+        @Override
+        protected void printLog(String str) {
+
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,21 +109,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     }
 
     private void init() {
-        btn_Start = (Button) findViewById(R.id.btn_Start);
-        btn_SetMiniRssi = (Button) findViewById(R.id.btn_SetMiniTimes);
-
-        btn_Start.setOnClickListener(this);
-        btn_SetMiniRssi.setOnClickListener(this);
-
-
-        edt_miniRssi = (EditText) findViewById(R.id.edt_miniTimes);
-
         textView = (TextView) findViewById(R.id.tv_rssiList);
         tv_BLEList = (TextView) findViewById(R.id.tv_bleList);
         tv_userName = (TextView) findViewById(R.id.tv_userName);
         tv_welcome = (TextView) findViewById(R.id.tv_welcome);
         tv_chatMessage = (TextView) findViewById(R.id.tv_chatMessage);
-
         imageView = (ImageView) findViewById(R.id.imageview);
 
         DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -135,39 +134,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_Start:
-                if (btn_Start.getText().equals("Start")) {
-                    btn_Start.setText("Stop");
-                    Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show();
-                } else {
-                    btn_Start.setText("Start");
-                    Toast.makeText(this, "Stop", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.btn_SetMiniTimes:
-                miniTimes = Integer.parseInt(edt_miniRssi.getText().toString());
-                Toast.makeText(this, "Setting miniTimes OK", Toast.LENGTH_SHORT).show();
-                break;
-
-        }
-    }
-
-    @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.nav_start:
                 if (item.getTitle().equals("Start")) {
                     item.setTitle("Stop");
                     start();
-                    Toast.makeText(MainActivity.this, "Start", Toast.LENGTH_SHORT).show();
                 } else {
                     item.setTitle("Start");
-//                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
-//                    serverThread.stopServer();
                     Stop();
-                    Toast.makeText(MainActivity.this, "Stop", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.nav_debug:
@@ -175,16 +150,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
                     item.setTitle("ExitDebugMode");
                     textView.setVisibility(View.VISIBLE);
                     tv_BLEList.setVisibility(View.VISIBLE);
-                    btn_SetMiniRssi.setVisibility(View.VISIBLE);
-                    edt_miniRssi.setVisibility(View.VISIBLE);
                     tv_chatMessage.setVisibility(View.VISIBLE);
                     Toast.makeText(MainActivity.this, "EnterDebugMode", Toast.LENGTH_SHORT).show();
                 } else {
                     item.setTitle("EnterDebugMode");
                     textView.setVisibility(View.INVISIBLE);
                     tv_BLEList.setVisibility(View.INVISIBLE);
-                    btn_SetMiniRssi.setVisibility(View.INVISIBLE);
-                    edt_miniRssi.setVisibility(View.INVISIBLE);
                     tv_chatMessage.setVisibility(View.INVISIBLE);
                     Toast.makeText(MainActivity.this, "ExitDebugMode", Toast.LENGTH_SHORT).show();
                 }
@@ -192,9 +163,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             case R.id.nav_chartTest:
                 startActivity(new Intent(MainActivity.this, ChartTestActivity.class));
                 break;
-//            case R.id.nav_mapTest:
-//                startActivity(new Intent(MainActivity.this, SQLiteActivity.class));
-//                break;
+            case R.id.nav_collectRSSI:
+                startActivity(new Intent(MainActivity.this, CollectRSSIActivity.class));
+                break;
             case R.id.nav_setting:
                 startActivity(new Intent(MainActivity.this, SettingActivity.class));
                 break;
@@ -238,6 +209,20 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
         if (isExisted == false) {
             BLE mBle = new BLE(device, rssi);
             mBLEs.add(mBle);
+        }
+    }
+
+    private void updateRssiAVG(String bleName, int rssi) {
+        boolean isExit = false;
+        for (BLEData bleData : bleDataList) {
+            if (bleData.bleName.equals(bleName)) {
+                isExit = true;
+                bleData.calculateRssiAVG(rssi);
+                break;
+            }
+        }
+        if (!isExit) {
+            bleDataList.add(new BLEData(bleName, rssi));
         }
     }
 
@@ -385,6 +370,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             }
         }.start();
         mBluetoothAdapter.startLeScan(mLeScanCallback);
+        myLeScaner.startLeScan();
     }
 
     private void logout() {
@@ -422,6 +408,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             }
         }.start();
         mBluetoothAdapter.stopLeScan(mLeScanCallback);
+        myLeScaner.stopLeScan();
     }
 
     private void start() {
@@ -442,5 +429,21 @@ public class MainActivity extends Activity implements View.OnClickListener, Navi
             }
         });
     }
-}
 
+    class BLEData {
+        String bleName;
+        List<Integer> rssiList = new ArrayList<>();
+        List<Float> rssiAVGList = new ArrayList<>();
+
+        BLEData(String bleName, int rssi) {
+            this.bleName = bleName;
+            rssiList.add(rssi);
+            calculateRssiAVG(rssi);
+        }
+
+        void calculateRssiAVG(int rssi) {
+            float rssiAVG = (rssi - rssiAVGList.get(rssiAVGList.size() - 1)) * 0.1f;
+            rssiAVGList.add(rssiAVG);
+        }
+    }
+}

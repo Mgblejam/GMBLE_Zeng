@@ -1,12 +1,7 @@
 package com.example.thesamespace.gmble_zeng;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Html;
@@ -14,13 +9,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import lecho.lib.hellocharts.model.Axis;
@@ -34,199 +26,134 @@ import lecho.lib.hellocharts.view.LineChartView;
  * Created by thesamespace on 2016/1/13.
  */
 public class ChartTestActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
-    private Button btn_StartStopChart;
-    private EditText edt_TxPower;
-    private EditText edt_N;
+    private Button btn_start;
     private TextView tv_Legend;
-    private TextView tv_rssiCount;
-    private EditText edit_distance;
     private LineChartView mLineChartView;
-    private BluetoothAdapter mBluetoothAdapter;
-    private List<BLE> mBLEs = new ArrayList<BLE>();
     private int[] colors = {ChartUtils.COLORS[0], ChartUtils.COLORS[1], ChartUtils.COLORS[2], ChartUtils.COLORS[3], ChartUtils.COLORS[4], Color.BLUE, Color.BLACK, Color.GREEN, Color.RED, Color.GRAY, Color.DKGRAY};
     private int colorIndex = 0;
-    private boolean clearMessage = false;
+    private boolean clearChartFlage = false;
     private LinearLayout linearLayout;
     private int checkboxID = 0;
-    private MySQLite mySQLite;
-    private SQLiteDatabase sqLiteDatabase;
-    private int distance = 1;
-    private int txPower = -60;
-    private float n = 0.3f;
-    private Context context;
+    List<BLERssiLine> bleRssiLines = new ArrayList<>();
+    private MyLeScaner myLeScaner = new MyLeScaner() {
+        @Override
+        protected void mOnLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+//            if (device.getName().equals("MYBLE")) {
+//                String tempName = "";
+//                switch (scanRecord[24]) {
+//                    case 0:
+//                        tempName = "-23dBm";
+//                        break;
+//                    case 1:
+//                        tempName = "-6dBm";
+//                        break;
+//                    case 2:
+//                        tempName = "0dBm";
+//                        break;
+//                    case 3:
+//                        tempName = "4dBm";
+//                        break;
+//                }
+//
+//            }
+            addBLERssiLineToList(device.getName(), rssi);
+        }
+
+        @Override
+        protected void printLog(String str) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_charttest);
-        init();
-        context = getApplicationContext();
+        initView();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBluetoothAdapter.stopLeScan(mLeScanCallback);
+        myLeScaner.stopLeScan();
     }
 
-    private void init() {
+    private void initView() {
         linearLayout = (LinearLayout) findViewById(R.id.layout_checkboxs);
-        btn_StartStopChart = (Button) findViewById(R.id.btn_StartStopChart);
-        Button btn_ClearChart = (Button) findViewById(R.id.btn_ClearChart);
-        Button btn_ShowDB = (Button) findViewById(R.id.btn_ShowDB);
-        Button btn_ClearDB = (Button) findViewById(R.id.btn_ClearDataBase);
-        Button btn_setting = (Button) findViewById(R.id.btn_setting);
-        Button btn_setTxPower = (Button) findViewById(R.id.btn_setTxPower);
-        Button btn_setN = (Button) findViewById(R.id.btn_setN);
-        Button btn_Test = (Button) findViewById(R.id.btn_test);
+        btn_start = (Button) findViewById(R.id.btn_startChart);
+        Button btn_clearChart = (Button) findViewById(R.id.btn_clearChart);
 
-        Button btn_save = (Button) findViewById(R.id.btn_save);
-        btn_save.setOnClickListener(this);
-        btn_StartStopChart.setOnClickListener(this);
-        btn_ClearChart.setOnClickListener(this);
-        btn_ShowDB.setOnClickListener(this);
-        btn_ClearDB.setOnClickListener(this);
-        btn_setting.setOnClickListener(this);
-        btn_setTxPower.setOnClickListener(this);
-        btn_setN.setOnClickListener(this);
-        btn_Test.setOnClickListener(this);
-
-        edt_TxPower = (EditText) findViewById(R.id.edt_txPower);
-        edt_N = (EditText) findViewById(R.id.edt_n);
+        btn_start.setOnClickListener(this);
+        btn_clearChart.setOnClickListener(this);
 
         tv_Legend = (TextView) findViewById(R.id.tv_Legend01);
-        tv_rssiCount = (TextView) findViewById(R.id.tv_rssiCount);
-        edit_distance = (EditText) findViewById(R.id.edt_distance);
 
         mLineChartView = (LineChartView) findViewById(R.id.linechartview);
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, "No Bluetooth", Toast.LENGTH_SHORT).show();
-        }
-//        mySQLite = new MySQLite(this, "BLE.db", null, 2);
-//        sqLiteDatabase = mySQLite.getWritableDatabase();
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_StartStopChart:
-                if (btn_StartStopChart.getText().equals("Start")) {
-                    btn_StartStopChart.setText("Stop");
-                    mBluetoothAdapter.startLeScan(mLeScanCallback);
-                    Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show();
+            case R.id.btn_startChart:
+                if (btn_start.getText().equals("Start")) {
+                    btn_start.setText("Stop");
+                    myLeScaner.startLeScan();
                 } else {
-                    btn_StartStopChart.setText("Start");
-                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                    Toast.makeText(this, "Stop", Toast.LENGTH_SHORT).show();
+                    btn_start.setText("Start");
+                    myLeScaner.stopLeScan();
                 }
                 break;
-            case R.id.btn_ClearChart:
-                clearMessage = true;
-                break;
-            case R.id.btn_ShowDB:
-                StringBuilder sb = new StringBuilder();
-                Cursor cursor = sqLiteDatabase.query("MYBLE_00005", null, null, null, null, null, null);
-                if (cursor.moveToFirst()) {
-                    do {
-                        int id = cursor.getInt(cursor.getColumnIndex("id"));
-//                        String name = cursor.getString(cursor.getColumnIndex("name"));
-                        int distance = cursor.getInt(cursor.getColumnIndex("distance"));
-                        int rssi = cursor.getInt(cursor.getColumnIndex("rssi"));
-                        sb.append(String.format("ID:%d distance:%d rssi:%d \n", id, distance, rssi));
-                    } while (cursor.moveToNext());
-                }
-                cursor.close();
-                Toast.makeText(this, sb.toString(), Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.btn_ClearDataBase:
-                sqLiteDatabase.delete("MYBLE_00005", null, null);
-                sqLiteDatabase.delete("MYBLE_00006", null, null);
-                sqLiteDatabase.delete("MYBLE_00007", null, null);
-                sqLiteDatabase.delete("MYBLE02", null, null);
-                break;
-            case R.id.btn_setting:
-                distance = Integer.parseInt(edit_distance.getText().toString());
-                break;
-            case R.id.btn_setTxPower:
-                txPower = Integer.parseInt(edt_TxPower.getText().toString());
-                break;
-            case R.id.btn_setN:
-                n = Float.parseFloat(edt_N.getText().toString());
-                break;
-            case R.id.btn_test:
-                int rssi1 = -60;
-                double distance = Math.pow(10, (rssi1 - txPower) / -10 * n);
-                Toast.makeText(this, "" + distance, Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.btn_save:
-                save();
+            case R.id.btn_clearChart:
+                clearChartFlage = true;
                 break;
         }
     }
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        for (BLE ble : mBLEs) {
-            if (ble.mDevice.getName().equals(buttonView.getText().toString())) {
-                ble.setEnabled(buttonView.isChecked());
+        for (BLERssiLine bleRssiLine : bleRssiLines) {
+            if (bleRssiLine.bleName.equals(buttonView.getText().toString())) {
+                bleRssiLine.showFlage = buttonView.isChecked();
+                drawLine();
                 break;
             }
         }
     }
 
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            updateBLEList(device, rssi);
-//            showRssiCount();
-//            updateSQLite(device.getName(), distance, rssi);
+    private void addBLERssiLineToList(String bleName, int rssi) {
+        if (clearChartFlage) {
+            for (BLERssiLine bleRssiLine : bleRssiLines) {
+                bleRssiLine.mPointValues_rssi.clear();
+            }
+            clearChartFlage = false;
         }
-    };
-
-    private void updateBLEList(BluetoothDevice device, int rssi) {
-        Boolean isExisted = false;
-        for (int i = 0; i < mBLEs.size(); i++) {
-            if (mBLEs.get(i).mDevice.getName().toString().equals(device.getName().toString())) {
-                mBLEs.get(i).upDate(rssi);
-                isExisted = true;
+        boolean exitFlage = false;
+        for (BLERssiLine bleRssiLine : bleRssiLines) {
+            if (bleRssiLine.bleName.equals(bleName)) {
+                exitFlage = true;
+                bleRssiLine.mPointValues_rssi.add(new PointValue(bleRssiLine.mPointValues_rssi.size(), rssi));
                 break;
             }
         }
-        if (isExisted == false) {
-            BLE mBle = new BLE(device, rssi);
-            mBle.setColor(colors[colorIndex]);
+
+        if (!exitFlage) {
+            bleRssiLines.add(new BLERssiLine(bleName, rssi, colors[colorIndex]));
             colorIndex++;
-            if (colorIndex > colors.length - 1) {
+            if (colorIndex == colors.length) {
                 colorIndex = 0;
             }
-            mBLEs.add(mBle);
-            createCheckBox(device.getName());
-//            mySQLite.createTable(sqLiteDatabase, device.getName());
+            createCheckBox(bleName);
         }
         drawLine();
-        if (clearMessage == true) {
-            clearMessage = false;
-            for (BLE ble : mBLEs) {
-                ble.rssiList.clear();
-                ble.rssiAVGList.clear();
-                ble.rssiSum = 0;
-                ble.setVariance(0);
-            }
-        }
     }
 
     private void drawLine() {
         final LineChartData mData = new LineChartData();
-        List<Line> mLines = new ArrayList<Line>();
-        for (BLE ble : mBLEs) {
-            if (ble.isEnabled()) {
-                List<PointValue> mPointValues_rssi = new ArrayList<PointValue>();
-                for (int i = 0; i < ble.rssiAVGList.size(); i++) {
-                    mPointValues_rssi.add(new PointValue(i, ble.rssiList.get(i)));
-                }
-                Line mLine = new Line(mPointValues_rssi);
-                mLine.setColor(ble.getColor());
+        List<Line> mLines = new ArrayList<>();
+        for (BLERssiLine bleRssiLine : bleRssiLines) {
+            if (bleRssiLine.showFlage) {
+                Line mLine = new Line(bleRssiLine.mPointValues_rssi);
+                mLine.setColor(bleRssiLine.lineColor);
                 mLine.setHasPoints(false);
                 mLine.setStrokeWidth(1);
                 mLines.add(mLine);
@@ -254,14 +181,13 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
     }
 
     private void setLegend() {
-//        Collections.sort(mBLEs);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 String str = "";
-                for (BLE ble : mBLEs) {
-                    if (ble.isEnabled()) {
-                        str += String.format("<font color=%d>%s %d - Variance:%.2f</font><br>", ble.getColor(), ble.mDevice.getName(), ble.getLastRssi(), ble.getVariance());
+                for (BLERssiLine bleRssiLine : bleRssiLines) {
+                    if (bleRssiLine.showFlage) {
+                        str += String.format("<font color=%d>%s</font><br>", bleRssiLine.lineColor, bleRssiLine.bleName);
                     }
                 }
                 tv_Legend.setText(Html.fromHtml(str));
@@ -284,43 +210,16 @@ public class ChartTestActivity extends Activity implements View.OnClickListener,
         });
     }
 
-    private void updateSQLite(String tableName, int distance, int rssi) {
-        ContentValues values1 = new ContentValues();
-//        values1.put("name", tableName);
-        values1.put("distance", distance);
-        values1.put("rssi", rssi);
-        //参数依次是：表名，强行插入null值得数据列的列名，一行记录的数据
-        sqLiteDatabase.insert(tableName, null, values1);
+    class BLERssiLine {
+        String bleName;
+        List<PointValue> mPointValues_rssi = new ArrayList<>();
+        int lineColor;
+        boolean showFlage = true;
+
+        BLERssiLine(String bleName, int rssi, int lineColor) {
+            this.bleName = bleName;
+            mPointValues_rssi.add(new PointValue(mPointValues_rssi.size(), rssi));
+            this.lineColor = lineColor;
+        }
     }
-
-    private void save() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                SDFileHelper sdFileHelper = new SDFileHelper(context);
-                for (BLE ble : mBLEs) {
-                    try {
-                        sdFileHelper.savaFileToSD(ble.mDevice.getName() + ".txt", ble.getRssiStr());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
-
-    }
-
-    private void showRssiCount() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                tv_rssiCount.setText("已收集Rssi数据数量:");
-                for (BLE ble : mBLEs) {
-                    tv_rssiCount.append("\n" + ble.mDevice.getName()+":" + ble.rssiList.size());
-                }
-            }
-        });
-
-    }
-
 }

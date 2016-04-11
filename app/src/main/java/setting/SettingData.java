@@ -25,7 +25,7 @@ public class SettingData extends Application {
         timeOut = config.getInt("timeOut", 1000);
     }
 
-    public void writeConfig() {
+    public void saveConfig() {
         SharedPreferences.Editor editor = config.edit();
         editor.putString("IP", IP);
         editor.putInt("port", port);

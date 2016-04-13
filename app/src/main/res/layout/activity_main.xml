@@ -8,13 +8,12 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ImageView
-            android:id="@+id/imageview"
+            android:id="@+id/img_mainBackground"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_gravity="center"
@@ -23,121 +22,66 @@
             android:scaleType="fitCenter"
             android:src="@drawable/magicwiselogo" />
 
-        <TextView
-            android:id="@+id/tv_userName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:alpha="0.8"
-            android:background="#7e7e7e"
-            android:paddingBottom="5dp"
-            android:paddingLeft="30dp"
-            android:paddingRight="30dp"
-            android:paddingTop="5dp"
-            android:text="User:No User"
-            android:textColor="#ffffff"
-            android:textSize="30dp" />
-
-        <TextView
-            android:id="@+id/tv_welcome"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="30dp"
-            android:alpha="0.8"
-            android:background="#292929"
-            android:gravity="center"
-            android:text="Welcome UserName"
-            android:textColor="#d7d7d7"
-            android:textSize="70dp"
-            android:textStyle="bold"
-            android:typeface="sans"
-            android:visibility="invisible" />
-
-        <TextView
-            android:id="@+id/tv_rssiList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:layout_marginLeft="50dp"
-            android:layout_marginRight="50dp"
-            android:layout_marginTop="100dp"
-            android:alpha="0.8"
-            android:background="#292929"
-            android:fontFamily="@string/abc_action_bar_up_description"
-            android:gravity="center"
-            android:text=""
-            android:textColor="#d7d7d7"
-            android:textSize="50dp"
-            android:textStyle="bold"
-            android:typeface="sans"
-            android:visibility="invisible" />
-
-        <TextView
-            android:id="@+id/tv_chatMessage"
-            android:layout_gravity="bottom"
-            android:layout_margin="10dp"
-            android:layout_width="300dp"
-            android:layout_height="200dp" />
-
-        <TextView
-            android:id="@+id/tv_bleList"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_margin="20dp"
-            android:alpha="0.8"
-            android:background="#2a2a2a"
-            android:text="BLE Name"
-            android:textColor="#f9f9f9"
-            android:visibility="invisible" />
-
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_margin="10dp"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:gravity="right">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btn_Start"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:alpha="0.6"
-                android:text="Start"
-                android:visibility="gone" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2">
 
-            <Button
-                android:id="@+id/btn_SetMiniTimes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:alpha="0.8"
-                android:text="Setting"
-                android:visibility="invisible" />
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingLeft="20dp"
+                    android:paddingTop="20dp">
 
-            <EditText
-                android:id="@+id/edt_miniTimes"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:alpha="0.8"
-                android:autoText="false"
-                android:background="#2a2a2a"
-                android:enabled="true"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:text="20"
-                android:textColor="#fff"
-                android:visibility="invisible" />
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="4">
+
+                        <ImageView
+                            android:id="@+id/img_userHead"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/user" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1">
+
+                        <TextView
+                            android:id="@+id/tv_userName"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="user name" />
+                    </TableRow>
+                </TableLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/tv_mainLog"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Log:"/>
+                </ScrollView>
+            </LinearLayout>
         </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|top"
-            android:visibility="gone" />
     </FrameLayout>
 
     <android.support.design.widget.NavigationView
@@ -146,6 +90,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:fitsSystemWindows="false"
+        android:visibility="gone"
         app:headerLayout="@layout/activity_navheader"
-        app:menu="@layout/activity_mainmenudrawer"></android.support.design.widget.NavigationView>
+        app:menu="@layout/activity_mainmenudrawer">
+
+    </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>

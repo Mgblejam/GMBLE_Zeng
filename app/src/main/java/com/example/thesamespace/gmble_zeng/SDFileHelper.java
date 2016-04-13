@@ -28,6 +28,7 @@ public class SDFileHelper {
             filename = Environment.getExternalStorageDirectory().getCanonicalPath() + "/" + filename;
             FileOutputStream output = new FileOutputStream(filename);
             output.write(filecontent.getBytes());
+            output.flush();
             output.close();
         } else Toast.makeText(context, "SD卡不存在或者不可读写", Toast.LENGTH_SHORT).show();
     }

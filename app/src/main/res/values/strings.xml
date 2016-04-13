@@ -2,4 +2,6 @@
     <string name="app_name">GMBLE_Zeng</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="login_edt_user">User Name</string>
+    <string name="login_edt_password">Pass Word</string>
 </resources>

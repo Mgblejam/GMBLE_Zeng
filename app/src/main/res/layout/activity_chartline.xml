@@ -38,9 +38,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="70dp"
-            android:orientation="vertical"></LinearLayout>
+            android:orientation="vertical">
 
+        </LinearLayout>
 
+        <TextView
+            android:id="@+id/tv_maxBLEName"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="BLE00001"
+            android:textSize="30sp" />
     </FrameLayout>
 
     <LinearLayout
@@ -52,6 +61,20 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:gravity="right">
+
+        <CheckBox
+            android:id="@+id/ckb_rssiLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Rssi Line" />
+
+        <CheckBox
+            android:id="@+id/ckb_countLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Count Line" />
 
         <Button
             android:id="@+id/btn_startChart"

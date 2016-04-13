@@ -28,11 +28,11 @@ public abstract class SocketClient {
 
     public void connect(final String IP, final int port) {
         if (socket != null && socket.isConnected()) {
-            ShowMsg("Already connected!");
+            printLog("Already connected!");
             return;
         }
 
-        ShowMsg("Connecting:" + IP + " " + port);
+        printLog("Connecting:" + IP + " " + port);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -41,14 +41,14 @@ public abstract class SocketClient {
                     socket.connect(new InetSocketAddress(IP, port), 1000);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    ShowMsg(e.getMessage());
+                    printLog(e.getMessage());
                     return;
                 }
 
                 if (socket.isConnected()) {
-                    ShowMsg("Connect successfully！");
+                    printLog("Connect successfully！");
                 } else {
-                    ShowMsg("Connect failed！");
+                    printLog("Connect failed！");
                     return;
                 }
 
@@ -60,11 +60,11 @@ public abstract class SocketClient {
 
     public void send(String sendStr) {
         if (socket == null || !socket.isConnected()) {
-            ShowMsg("Not connected！");
+            printLog("Not connected！");
             return;
         }
         if (sendStr.equals("")) {
-            ShowMsg("Send content can not be empty!");
+            printLog("Send content can not be empty!");
             return;
         }
 
@@ -73,32 +73,32 @@ public abstract class SocketClient {
             os = socket.getOutputStream();
         } catch (IOException e) {
             e.printStackTrace();
-            ShowMsg(e.getMessage());
+            printLog(e.getMessage());
             return;
         }
         try {
             os.write(sendStr.getBytes("gb2312"));
         } catch (IOException e) {
             e.printStackTrace();
-            ShowMsg(e.getMessage());
+            printLog(e.getMessage());
             return;
         }
-        ShowMsg(sendStr);
+        printLog(sendStr);
     }
 
     public void disConnect() {
         if (socket == null || !socket.isConnected()) {
-            ShowMsg("Not connected!");
+            printLog("Not connected!");
             return;
         }
         try {
             checkOnLineThreadFlage = false;
             socket.close();
             socket = null;
-            ShowMsg("Disconnect successfully!");
+            printLog("Disconnect successfully!");
         } catch (IOException e) {
             e.printStackTrace();
-            ShowMsg(e.getMessage());
+            printLog(e.getMessage());
             return;
         }
     }
@@ -107,44 +107,46 @@ public abstract class SocketClient {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                InputStream is;
+                InputStream inputStream;
                 if (socket == null) {
                     return;
                 }
 
                 try {
-                    is = socket.getInputStream();
+                    inputStream = socket.getInputStream();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    ShowMsg(e.getMessage());
+                    printLog(e.getMessage());
                     return;
                 }
 
                 int length;
                 while (ListenThreadFlage) {
-                    do {
-                        try {
-                            length = is.available();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            return;
-                        }
-                    } while (length == 0);
-
-                    byte[] bytes = new byte[length];
+//                    do {
+//                        try {
+//                            length = inputStream.read();
+//                            System.out.println("接收中。。。。" + length);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                            return;
+//                        }
+//                    } while (length == 0);
+                    byte[] bytes = new byte[1024];
                     try {
-                        is.read(bytes);
+                        int a = inputStream.read(bytes);
+                        System.out.println("接收中。。。。" + a);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        ShowMsg(e.getMessage());
+                        printLog(e.getMessage());
                         return;
                     }
 
                     try {
+                        onListen(bytes);
                         onListen(new String(bytes, "gb2312"));
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
-                        ShowMsg(e.getMessage());
+                        printLog(e.getMessage());
                         return;
                     }
                 }
@@ -160,7 +162,7 @@ public abstract class SocketClient {
                 while (checkOnLineThreadFlage) {
                     if (!isOnLine()) {
                         socket = null;
-                        ShowMsg("offline...");
+                        printLog("offline...");
                         onOffLine();
                         return;
                     }
@@ -190,7 +192,9 @@ public abstract class SocketClient {
 
     public abstract void onListen(final String receiveString);
 
+    public abstract void onListen(final byte[] bytes);
+
     public abstract void onOffLine();
 
-    public abstract void ShowMsg(final String logMessage);
+    public abstract void printLog(final String logMessage);
 }

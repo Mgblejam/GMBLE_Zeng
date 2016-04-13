@@ -7,10 +7,12 @@ import android.content.SharedPreferences;
  * Created by thesamespace on 2016/3/25.
  */
 public class SettingData extends Application {
+    private String userNmae;
     private SharedPreferences config;
     private String IP = "127.0.0.1";
     private int port = 9999;
     private int timeOut = 3000;
+    private int miniBigerTimes = 3;
 
     @Override
     public void onCreate() {
@@ -55,5 +57,21 @@ public class SettingData extends Application {
 
     public void setTimeOut(int timeOut) {
         this.timeOut = timeOut;
+    }
+
+    public int getMiniBigerTimes() {
+        return miniBigerTimes;
+    }
+
+    public void setMiniBigerTimes(int miniBigerTimes) {
+        this.miniBigerTimes = miniBigerTimes;
+    }
+
+    public String getUserNmae() {
+        return userNmae;
+    }
+
+    public void setUserNmae(String userNmae) {
+        this.userNmae = userNmae;
     }
 }

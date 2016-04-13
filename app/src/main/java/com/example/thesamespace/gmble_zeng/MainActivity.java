@@ -1,25 +1,21 @@
 package com.example.thesamespace.gmble_zeng;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,23 +24,21 @@ import java.util.List;
 import setting.SettingActivity;
 import setting.SettingData;
 import socket.SocketClient;
+import socket.SocketTestActivity;
 
 
 public class MainActivity extends Activity implements NavigationView.OnNavigationItemSelectedListener {
     private SettingData settingData;
-    private TextView textView;
-    private TextView tv_BLEList;
-    private TextView tv_userName;
-    private TextView tv_welcome;
-    private TextView tv_chatMessage;
-    private ImageView imageView;
-    private BluetoothAdapter mBluetoothAdapter;
-    private List<BLE> mBLEs = new ArrayList<BLE>();
+
+    private ImageView img_mainBackground;
+    private ImageView img_userHead;
+    private TextView tv_userNmae;
+    private TextView tv_mainLog;
+
+    private List<BLEData> bleDataList = new ArrayList<>();
     private String tempStr = "";
-    private int miniTimes = 20;
     private String lastMaxBLE;
     private String curMaxBLE;
-    private float curMaxRssi = 0;
     private int biggerTimes;
     private String userName = "Marry";
     private SocketClient socketClient = new SocketClient() {
@@ -59,7 +53,12 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                     logout();
                     break;
             }
-            ShowMsg(receiveString);
+            printLog(receiveString);
+        }
+
+        @Override
+        public void onListen(byte[] bytes) {
+
         }
 
         @Override
@@ -68,27 +67,34 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         }
 
         @Override
-        public void ShowMsg(final String logMessage) {
+        public void printLog(final String logMessage) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    tv_chatMessage.append(logMessage + "\n");
                 }
             });
         }
     };
     private String[] BLENames = new String[]{"MAGICWISE00005", "MAGICWISE00006", "MAGICWISE00007"};
-
-    private List<BLEData> bleDataList = new ArrayList<>();
     private MyLeScaner myLeScaner = new MyLeScaner() {
         @Override
         protected void mOnLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            updateRssiAVG(device.getName(), rssi);
+            if (device.getName().equals(BLENames[0]) || device.getName().equals(BLENames[1]) || device.getName().equals(BLENames[2])) {
+                addBLEData(device.getName(), rssi);
+                Collections.sort(bleDataList);
+                showNearestBLE();
+                printLog(device.getName());
+            }
         }
 
         @Override
-        protected void printLog(String str) {
-
+        protected void printLog(final String str) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    tv_mainLog.append("\n" + str);
+                }
+            });
         }
     };
 
@@ -98,23 +104,18 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         setFfullScreen();
         setContentView(R.layout.activity_main);
         settingData = (SettingData) getApplication();
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, "No Bluetooth", Toast.LENGTH_SHORT).show();
-        }
-        if (mBluetoothAdapter.isEnabled() == false) {
-            mBluetoothAdapter.enable();
-        }
-        init();
+        initView();
     }
 
-    private void init() {
-        textView = (TextView) findViewById(R.id.tv_rssiList);
-        tv_BLEList = (TextView) findViewById(R.id.tv_bleList);
-        tv_userName = (TextView) findViewById(R.id.tv_userName);
-        tv_welcome = (TextView) findViewById(R.id.tv_welcome);
-        tv_chatMessage = (TextView) findViewById(R.id.tv_chatMessage);
-        imageView = (ImageView) findViewById(R.id.imageview);
+    private void initView() {
+        img_mainBackground = (ImageView) findViewById(R.id.img_mainBackground);
+        img_userHead = (ImageView) findViewById(R.id.img_userHead);
+        tv_userNmae = (TextView) findViewById(R.id.tv_userName);
+        tv_mainLog = (TextView) findViewById(R.id.tv_mainLog);
+
+        if (!settingData.getUserNmae().equals("")) {
+            tv_userNmae.setText(settingData.getUserNmae());
+        }
 
         DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -146,25 +147,15 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                 }
                 break;
             case R.id.nav_debug:
-                if (item.getTitle().equals("EnterDebugMode")) {
-                    item.setTitle("ExitDebugMode");
-                    textView.setVisibility(View.VISIBLE);
-                    tv_BLEList.setVisibility(View.VISIBLE);
-                    tv_chatMessage.setVisibility(View.VISIBLE);
-                    Toast.makeText(MainActivity.this, "EnterDebugMode", Toast.LENGTH_SHORT).show();
-                } else {
-                    item.setTitle("EnterDebugMode");
-                    textView.setVisibility(View.INVISIBLE);
-                    tv_BLEList.setVisibility(View.INVISIBLE);
-                    tv_chatMessage.setVisibility(View.INVISIBLE);
-                    Toast.makeText(MainActivity.this, "ExitDebugMode", Toast.LENGTH_SHORT).show();
-                }
                 break;
             case R.id.nav_chartTest:
-                startActivity(new Intent(MainActivity.this, ChartTestActivity.class));
+                startActivity(new Intent(MainActivity.this, LineChartActivity.class));
                 break;
             case R.id.nav_collectRSSI:
                 startActivity(new Intent(MainActivity.this, CollectRSSIActivity.class));
+                break;
+            case R.id.nav_socketTest:
+                startActivity(new Intent(MainActivity.this, SocketTestActivity.class));
                 break;
             case R.id.nav_setting:
                 startActivity(new Intent(MainActivity.this, SettingActivity.class));
@@ -179,45 +170,18 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         return true;
     }
 
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (device.getName().equals(BLENames[0]) || device.getName().equals(BLENames[1]) || device.getName().equals(BLENames[2])) {
-                updateBLEList(device, rssi);
-                Collections.sort(mBLEs);
-                showBLEList();
-                showNearestBLE();
-            }
-        }
-    };
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBluetoothAdapter.stopLeScan(mLeScanCallback);
+        myLeScaner.stopLeScan();
     }
 
-    private void updateBLEList(BluetoothDevice device, int rssi) {
-        Boolean isExisted = false;
-        for (int i = 0; i < mBLEs.size(); i++) {
-            if (mBLEs.get(i).mDevice.getName().toString().equals(device.getName().toString())) {
-                mBLEs.get(i).upDate(rssi);
-                isExisted = true;
-                break;
-            }
-        }
-        if (isExisted == false) {
-            BLE mBle = new BLE(device, rssi);
-            mBLEs.add(mBle);
-        }
-    }
-
-    private void updateRssiAVG(String bleName, int rssi) {
+    private void addBLEData(String bleName, int rssi) {
         boolean isExit = false;
         for (BLEData bleData : bleDataList) {
             if (bleData.bleName.equals(bleName)) {
                 isExit = true;
-                bleData.calculateRssiAVG(rssi);
+                bleData.addRssiAVG(rssi);
                 break;
             }
         }
@@ -226,91 +190,85 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         }
     }
 
-    private void showBLEList() {
-        tempStr = "";
-        for (int i = 0; i < mBLEs.size(); i++) {
-            if (i == 0) {
-                tempStr += String.format("%s  %d avg:%.2f", mBLEs.get(i).mDevice.getName(), mBLEs.get(i).getLastRssi(), mBLEs.get(i).getRssiLastAVG());
-            } else {
-                tempStr += String.format("\n%s  %d avg:%.2f", mBLEs.get(i).mDevice.getName(), mBLEs.get(i).getLastRssi(), mBLEs.get(i).getRssiLastAVG());
-            }
-        }
-        tv_BLEList.post(new Runnable() {
-            @Override
-            public void run() {
-                tv_BLEList.setText(tempStr);
-            }
-        });
-    }
+//    private void showBLEList() {
+//        tempStr = "";
+//        for (int i = 0; i < bleDataList.size(); i++) {
+//            if (i == 0) {
+//                tempStr += String.format("%s  %d avg:%.2f", bleDataList.get(i).mDevice.getName(), bleDataList.get(i).getLastRssi(), bleDataList.get(i).getRssiLastAVG());
+//            } else {
+//                tempStr += String.format("\n%s  %d avg:%.2f", bleDataList.get(i).mDevice.getName(), bleDataList.get(i).getLastRssi(), bleDataList.get(i).getRssiLastAVG());
+//            }
+//        }
+//    }
 
     private void showNearestBLE() {
-        if (mBLEs.get(0).rssiList.size() < 3) {
-            return;
-        }
-        curMaxBLE = mBLEs.get(0).mDevice.getName();
-        curMaxRssi = mBLEs.get(0).getRssiLastAVG();
-        if (Math.abs(curMaxRssi - getLastMaxBLECurRssi(lastMaxBLE)) > 3) {
-            biggerTimes++;
-            if (biggerTimes >= miniTimes) {
-                biggerTimes = 0;
-                lastMaxBLE = mBLEs.get(0).mDevice.getName();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        setPic(curMaxBLE, userName);
-                        textView.setText(curMaxBLE);
-                    }
-                });
+//        if (bleDataList.get(0).rssiAVGList.size() < 2) {
+//            return;
+//        }
+        curMaxBLE = bleDataList.get(0).bleName;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setPic(curMaxBLE, userName);
             }
-        } else {
-            biggerTimes = 0;
-        }
+        });
+//        float curMaxRssi = bleDataList.get(0).lastRssiAVG;
+//
+//        if (Math.abs(curMaxRssi - getLastMaxBLECurRssi(lastMaxBLE)) > 3) {
+//            biggerTimes++;
+//            if (biggerTimes >= settingData.getMiniBigerTimes()) {
+//                biggerTimes = 0;
+//                lastMaxBLE = bleDataList.get(0).bleName;
+//            }
+//        } else {
+//            biggerTimes = 0;
+//        }
     }
 
     private void setPic(String BLEname, String userName) {
-        if (imageView.getScaleType() != ImageView.ScaleType.FIT_XY) {
-            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+        if (img_mainBackground.getScaleType() != ImageView.ScaleType.FIT_XY) {
+            img_mainBackground.setScaleType(ImageView.ScaleType.FIT_XY);
         }
-        if (imageView.getAlpha() < 1.0f) {
-            imageView.setAlpha(1.0f);
+        if (img_mainBackground.getAlpha() < 1.0f) {
+            img_mainBackground.setAlpha(1.0f);
         }
         switch (userName) {
             case "Marry":
                 switch (BLEname) {
                     case "MAGICWISE00005":
-                        imageView.setImageResource(R.drawable.img11);
+                        img_mainBackground.setImageResource(R.drawable.img11);
                         break;
                     case "MAGICWISE00006":
-                        imageView.setImageResource(R.drawable.img12);
+                        img_mainBackground.setImageResource(R.drawable.img12);
                         break;
                     case "MAGICWISE00007":
-                        imageView.setImageResource(R.drawable.img13);
+                        img_mainBackground.setImageResource(R.drawable.img13);
                         break;
                 }
                 break;
             case "Jack":
                 switch (BLEname) {
                     case "MAGICWISE00001":
-                        imageView.setImageResource(R.drawable.img21);
+                        img_mainBackground.setImageResource(R.drawable.img21);
                         break;
                     case "MAGICWISE00002":
-                        imageView.setImageResource(R.drawable.img22);
+                        img_mainBackground.setImageResource(R.drawable.img22);
                         break;
                     case "MAGICWISE00003":
-                        imageView.setImageResource(R.drawable.img23);
+                        img_mainBackground.setImageResource(R.drawable.img23);
                         break;
                 }
                 break;
             case "Tom":
                 switch (BLEname) {
                     case "MAGICWISE00001":
-                        imageView.setImageResource(R.drawable.img31);
+                        img_mainBackground.setImageResource(R.drawable.img31);
                         break;
                     case "MAGICWISE00002":
-                        imageView.setImageResource(R.drawable.img32);
+                        img_mainBackground.setImageResource(R.drawable.img32);
                         break;
                     case "MAGICWISE00003":
-                        imageView.setImageResource(R.drawable.img33);
+                        img_mainBackground.setImageResource(R.drawable.img33);
                         break;
                 }
                 break;
@@ -318,12 +276,12 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
     }
 
     private float getLastMaxBLECurRssi(String lastMaxBLE) {
-        if (mBLEs.size() == 1) {
+        if (bleDataList.size() == 1) {
             return 0;
         }
-        for (BLE ble : mBLEs) {
-            if (ble.mDevice.getName().equals(lastMaxBLE)) {
-                return ble.getRssiLastAVG();
+        for (BLEData bleData : bleDataList) {
+            if (bleData.bleName.equals(lastMaxBLE)) {
+                return bleData.lastRssiAVG;
             }
         }
         return 0;
@@ -348,9 +306,6 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                                 type = "(child)";
                                 break;
                         }
-                        tv_userName.setText("User:" + userName + type);
-                        tv_welcome.setVisibility(View.VISIBLE);
-                        tv_welcome.setText("Welcome  " + userName);
                     }
                 });
                 try {
@@ -363,18 +318,17 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                     public void run() {
                         Animation alphaAnimation = new AlphaAnimation(1.0f, 0f);
                         alphaAnimation.setDuration(1000);
-                        tv_welcome.startAnimation(alphaAnimation);
-                        tv_welcome.setVisibility(View.GONE);
+//                        tv_welcome.startAnimation(alphaAnimation);
+//                        tv_welcome.setVisibility(View.GONE);
                     }
                 });
             }
         }.start();
-        mBluetoothAdapter.startLeScan(mLeScanCallback);
         myLeScaner.startLeScan();
     }
 
     private void logout() {
-        socketClient.disConnect();
+//        socketClient.disConnect();
         new Thread() {
             @Override
             public void run() {
@@ -383,12 +337,9 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tv_userName.setText("User: No User");
-                        tv_welcome.setVisibility(View.VISIBLE);
-                        tv_welcome.setText("ByeBye  " + userName);
-                        imageView.setImageResource(R.drawable.magicwiselogo);
-                        imageView.setAlpha(0.3f);
-                        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        img_mainBackground.setImageResource(R.drawable.magicwiselogo);
+                        img_mainBackground.setAlpha(0.3f);
+                        img_mainBackground.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     }
                 });
                 try {
@@ -401,49 +352,51 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                     public void run() {
                         Animation alphaAnimation = new AlphaAnimation(1.0f, 0f);
                         alphaAnimation.setDuration(1000);
-                        tv_welcome.startAnimation(alphaAnimation);
-                        tv_welcome.setVisibility(View.GONE);
+//                        tv_welcome.startAnimation(alphaAnimation);
+//                        tv_welcome.setVisibility(View.GONE);
                     }
                 });
             }
         }.start();
-        mBluetoothAdapter.stopLeScan(mLeScanCallback);
         myLeScaner.stopLeScan();
     }
 
     private void start() {
-        printLog("连接服务器");
-        socketClient.connect(settingData.getIP(), settingData.getPort());
+        login("Marry", "");
+//        socketClient.connect(settingData.getIP(), settingData.getPort());
     }
 
     private void Stop() {
-        socketClient.disConnect();
         logout();
     }
 
-    private void printLog(final String str) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                tv_chatMessage.append(str + "\n");
-            }
-        });
-    }
-
-    class BLEData {
+    private class BLEData implements Comparable<Object> {
         String bleName;
+        float lastRssiAVG = 0;
         List<Integer> rssiList = new ArrayList<>();
         List<Float> rssiAVGList = new ArrayList<>();
 
         BLEData(String bleName, int rssi) {
             this.bleName = bleName;
-            rssiList.add(rssi);
-            calculateRssiAVG(rssi);
+            addRssi(rssi);
+            addRssiAVG(rssi);
         }
 
-        void calculateRssiAVG(int rssi) {
-            float rssiAVG = (rssi - rssiAVGList.get(rssiAVGList.size() - 1)) * 0.1f;
-            rssiAVGList.add(rssiAVG);
+        void addRssi(int rssi) {
+            rssiList.add(rssi);
+
+        }
+
+        void addRssiAVG(int rssi) {
+            lastRssiAVG = (rssi - lastRssiAVG) * 0.1f;
+            rssiAVGList.add(lastRssiAVG);
+        }
+
+        @Override
+        public int compareTo(@NonNull Object another) {
+            BLEData bleData = (BLEData) another;
+            Float i = bleData.lastRssiAVG;
+            return i.compareTo(this.lastRssiAVG);
         }
     }
 }

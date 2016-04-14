@@ -12,14 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ImageView
+        <ImageSwitcher
             android:id="@+id/img_mainBackground"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:adjustViewBounds="true"
-            android:alpha="0.3"
-            android:scaleType="fitCenter"
             android:src="@drawable/magicwiselogo" />
 
         <LinearLayout
@@ -63,6 +60,7 @@
                     </TableRow>
                 </TableLayout>
 
+
             </LinearLayout>
 
             <LinearLayout
@@ -78,10 +76,18 @@
                         android:id="@+id/tv_mainLog"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Log:"/>
+                        android:text="Log:" />
                 </ScrollView>
             </LinearLayout>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_curMaxBLE"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:text="BLE Name"
+            android:gravity="center"
+            android:textSize="70sp" />
     </FrameLayout>
 
     <android.support.design.widget.NavigationView

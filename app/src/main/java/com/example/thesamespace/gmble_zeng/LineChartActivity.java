@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -14,6 +15,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.Line;
@@ -35,10 +41,11 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
     private boolean clearChartFlage = false;
     private LinearLayout linearLayout;
     private int checkboxID = 0;
-    List<BLEData> bleDatas = new ArrayList<>();
+    List<BLEData> bleDatas = new CopyOnWriteArrayList<>();
     String[] bleNames = new String[]{"SHELF01", "SHELF02", "SHELF03", "SHELF04"};
     private int counter = 0;
-
+    static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final Object lock = new Object();
     private MyLeScaner myLeScaner = new MyLeScaner() {
         @Override
         protected void mOnLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -60,7 +67,9 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
 //                }
 //
 //            }
-            addBLERssiLineToList(device.getName(), rssi);
+            synchronized (lock) {
+                addBLERssiLineToList(device.getName(), rssi);
+            }
             for (final String bleName : bleNames) {
                 if (bleName.equals(device.getName())) {
                     counter = 0;
@@ -162,12 +171,16 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
         }
 
         boolean exitFlage = false;
-        for (BLEData bleData : bleDatas) {
-            if (bleData.bleName.equals(bleName)) {
-                exitFlage = true;
-                bleData.addRssiPoint(rssi);
-                bleData.count++;
-                break;
+        {
+            for (BLEData bleData : bleDatas) {
+                if (bleData.bleName.equals(bleName)) {
+                    exitFlage = true;
+                    bleData.addRssiPoint(rssi);
+                    bleData.addCount();
+                    Log.d("locktest", "addCount");
+                    System.out.println("addCount");
+                    break;
+                }
             }
         }
 
@@ -189,8 +202,11 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
                 while (BLEData.addCountFlage) {
                     try {
                         Thread.sleep(BLEData.cycle);
-                        for (BLEData bleData : bleDatas) {
-                            bleData.addCountPoint();
+                        synchronized (lock) {
+                            for (BLEData bleData : bleDatas) {
+                                Log.d("locktest", "addCountPoint");
+                                bleData.addmPointValues_count();
+                            }
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -219,16 +235,18 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
                     mLine.setStrokeWidth(1);
                     mLines.add(mLine);
                 }
-                if (BLEData.showCountLineFlage) {
-                    Line mLine = new Line(bleData.mPointValues_count);
-                    mLine.setColor(bleData.lineColor);
-                    mLine.setHasPoints(false);
-                    mLine.setStrokeWidth(1);
-                    mLines.add(mLine);
-                }
+//                if (BLEData.showCountLineFlage) {
+//                    Line mLine;
+//
+//                    mLine = new Line(bleData.getmPointValues_count());
+//                    Log.d("locktest", "drawLine");
+//                    mLine.setColor(bleData.lineColor);
+//                    mLine.setHasPoints(false);
+//                    mLine.setStrokeWidth(1);
+//                    mLines.add(mLine);
+//                }
             }
         }
-
         Axis axisX = new Axis();
         axisX.setName("Time");
         axisX.setMaxLabelChars(10);
@@ -298,6 +316,7 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                        break;
                     }
                 }
             }
@@ -313,9 +332,9 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
         private int lineColor;
         private int count;
         private boolean showFlage = true;
-
         private List<PointValue> mPointValues_rssi = new ArrayList<>();
         private List<PointValue> mPointValues_count = new ArrayList<>();
+        private int index = 0;
 
         BLEData(String bleName, int rssi, int lineColor) {
             this.bleName = bleName;
@@ -329,8 +348,34 @@ public class LineChartActivity extends Activity implements View.OnClickListener,
         }
 
         private void addCountPoint() {
-            mPointValues_count.add(new PointValue(mPointValues_count.size(), count));
-            count = 0;
+            mPointValues_count.add(new PointValue(index, count));
+//            index++;
+//            count = 0;
+
+//            try {
+//                readWriteLock.readLock().lock();
+//            } finally {
+//                readWriteLock.readLock().unlock();
+//            }
+//            try {
+//                readWriteLock.writeLock().lock();
+//
+//            } finally {
+//                readWriteLock.writeLock().unlock();
+//            }
+        }
+
+        synchronized void addCount() {
+            count++;
+        }
+
+        synchronized void addmPointValues_count() {
+            this.mPointValues_count.add(new PointValue(mPointValues_count.size(), count));
+//            count = 0;
+        }
+
+        synchronized List<PointValue> getmPointValues_count() {
+            return this.mPointValues_count;
         }
     }
 }

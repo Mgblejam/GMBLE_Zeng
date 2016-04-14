@@ -7,6 +7,7 @@ import org.altbeacon.beacon.logging.LogManager;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by thesamespace on 2016/1/3.
@@ -16,8 +17,8 @@ public class BLE implements Comparable<Object> {
     private int lastRssi;
     private int color;
     public int rssiSum = 0;
-    public ArrayList<Integer> rssiList = new ArrayList<Integer>();
-    public ArrayList<Float> rssiAVGList = new ArrayList<Float>();
+    public ArrayList<Integer> rssiList = new ArrayList<>();
+    public ArrayList<Float> rssiAVGList = new ArrayList<>();
     private float rssiLastAVG = 0;
     private boolean enabled = true;
     private double variance = 0;

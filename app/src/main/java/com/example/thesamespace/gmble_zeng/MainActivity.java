@@ -10,16 +10,23 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ViewSwitcher;
+
+import com.example.thesamespace.gmble_zeng.login.LogInActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import setting.SettingActivity;
 import setting.SettingData;
@@ -27,20 +34,22 @@ import socket.SocketClient;
 import socket.SocketTestActivity;
 
 
-public class MainActivity extends Activity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends Activity implements NavigationView.OnNavigationItemSelectedListener, ViewSwitcher.ViewFactory {
     private SettingData settingData;
 
-    private ImageView img_mainBackground;
+    private ImageSwitcher img_mainBackground;
     private ImageView img_userHead;
     private TextView tv_userNmae;
     private TextView tv_mainLog;
+    private TextView tv_curMaxBLE;
 
     private List<BLEData> bleDataList = new ArrayList<>();
     private String tempStr = "";
-    private String lastMaxBLE;
-    private String curMaxBLE;
+    private String lastMaxBLE = "";
+    private String curMaxBLE = "";
     private int biggerTimes;
     private String userName = "Marry";
+    private boolean waitFlage = false;
     private SocketClient socketClient = new SocketClient() {
         @Override
         public void onListen(String receiveString) {
@@ -81,9 +90,7 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         protected void mOnLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             if (device.getName().equals(BLENames[0]) || device.getName().equals(BLENames[1]) || device.getName().equals(BLENames[2])) {
                 addBLEData(device.getName(), rssi);
-                Collections.sort(bleDataList);
                 showNearestBLE();
-                printLog(device.getName());
             }
         }
 
@@ -108,10 +115,12 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
     }
 
     private void initView() {
-        img_mainBackground = (ImageView) findViewById(R.id.img_mainBackground);
+        img_mainBackground = (ImageSwitcher) findViewById(R.id.img_mainBackground);
+        img_mainBackground.setFactory(this);
         img_userHead = (ImageView) findViewById(R.id.img_userHead);
         tv_userNmae = (TextView) findViewById(R.id.tv_userName);
         tv_mainLog = (TextView) findViewById(R.id.tv_mainLog);
+        tv_curMaxBLE = (TextView) findViewById(R.id.tv_curMaxBLE);
 
         if (!settingData.getUserNmae().equals("")) {
             tv_userNmae.setText(settingData.getUserNmae());
@@ -190,28 +199,33 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         }
     }
 
-//    private void showBLEList() {
-//        tempStr = "";
-//        for (int i = 0; i < bleDataList.size(); i++) {
-//            if (i == 0) {
-//                tempStr += String.format("%s  %d avg:%.2f", bleDataList.get(i).mDevice.getName(), bleDataList.get(i).getLastRssi(), bleDataList.get(i).getRssiLastAVG());
-//            } else {
-//                tempStr += String.format("\n%s  %d avg:%.2f", bleDataList.get(i).mDevice.getName(), bleDataList.get(i).getLastRssi(), bleDataList.get(i).getRssiLastAVG());
-//            }
-//        }
-//    }
+    private String getBLEListStr() {
+        tempStr = "";
+        for (int i = 0; i < bleDataList.size(); i++) {
+            tempStr += String.format("\n%s", bleDataList.get(i).bleName);
+        }
+        return tempStr;
+    }
 
     private void showNearestBLE() {
-//        if (bleDataList.get(0).rssiAVGList.size() < 2) {
-//            return;
-//        }
-        curMaxBLE = bleDataList.get(0).bleName;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setPic(curMaxBLE, userName);
+        if (!waitFlage) {
+            waitFlage = true;
+            Collections.sort(bleDataList);
+            curMaxBLE = bleDataList.get(0).bleName;
+            getBLEListStr();
+            if (!curMaxBLE.equals(lastMaxBLE)) {
+                lastMaxBLE = curMaxBLE;
+                setPicThread(lastMaxBLE);
+                TimerTask timerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        waitFlage = false;
+                    }
+                };
+                Timer timer = new Timer();
+                timer.schedule(timerTask, 2000);
             }
-        });
+        }
 //        float curMaxRssi = bleDataList.get(0).lastRssiAVG;
 //
 //        if (Math.abs(curMaxRssi - getLastMaxBLECurRssi(lastMaxBLE)) > 3) {
@@ -225,10 +239,34 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
 //        }
     }
 
+    private void setPicThread(final String blename) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tv_curMaxBLE.setText(blename);
+                        tv_mainLog.setText(tempStr);
+                        Animation alphaAnimationIn = new AlphaAnimation(0f, 1.0f);
+                        alphaAnimationIn.setDuration(2000);
+                        Animation alphaAnimationOut = new AlphaAnimation(1.0f, 0f);
+                        alphaAnimationOut.setDuration(2000);
+                        img_mainBackground.setInAnimation(alphaAnimationIn);
+                        img_mainBackground.setOutAnimation(alphaAnimationOut);
+                        setPic(blename, userName);
+                    }
+                });
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
     private void setPic(String BLEname, String userName) {
-        if (img_mainBackground.getScaleType() != ImageView.ScaleType.FIT_XY) {
-            img_mainBackground.setScaleType(ImageView.ScaleType.FIT_XY);
-        }
         if (img_mainBackground.getAlpha() < 1.0f) {
             img_mainBackground.setAlpha(1.0f);
         }
@@ -339,7 +377,7 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                     public void run() {
                         img_mainBackground.setImageResource(R.drawable.magicwiselogo);
                         img_mainBackground.setAlpha(0.3f);
-                        img_mainBackground.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                        img_mainBackground.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     }
                 });
                 try {
@@ -370,11 +408,18 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         logout();
     }
 
+    @Override
+    public View makeView() {
+        return new ImageView(this);
+    }
+
     private class BLEData implements Comparable<Object> {
         String bleName;
         float lastRssiAVG = 0;
+        int count = 0;
         List<Integer> rssiList = new ArrayList<>();
         List<Float> rssiAVGList = new ArrayList<>();
+        List<Integer> countList = new ArrayList<>();
 
         BLEData(String bleName, int rssi) {
             this.bleName = bleName;
@@ -390,6 +435,10 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         void addRssiAVG(int rssi) {
             lastRssiAVG = (rssi - lastRssiAVG) * 0.1f;
             rssiAVGList.add(lastRssiAVG);
+        }
+
+        void updateCountList() {
+            countList.add(count);
         }
 
         @Override

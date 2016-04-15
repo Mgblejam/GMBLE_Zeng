@@ -230,24 +230,29 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
             return;
         }
         Collections.sort(bleDataList);
+        curMaxBLE = bleDataList.get(0).bleName;
+
+        if (lastMaxBLE.equals("")) {
+            lastMaxBLE = curMaxBLE;
+        }
+
         float curMaxRssi = bleDataList.get(0).lastRssiAVG;
         if (Math.abs(curMaxRssi - getLastMaxBLECurRssi(lastMaxBLE)) > 3) {
             biggerTimes++;
             if (biggerTimes >= settingData.getMiniBigerTimes()) {
                 biggerTimes = 0;
-                lastMaxBLE = bleDataList.get(0).bleName;
+                curMaxBLE = bleDataList.get(0).bleName;
             }
         } else {
             biggerTimes = 0;
         }
 
-        if (lastMaxBLE.equals("")) {
-            return;
-        }
-
         if (!waitFlage) {
             waitFlage = true;
-            setPicThread(lastMaxBLE);
+            if (!curMaxBLE.equals(lastMaxBLE)) {
+                lastMaxBLE = curMaxBLE;
+                setPicThread(lastMaxBLE);
+            }
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {

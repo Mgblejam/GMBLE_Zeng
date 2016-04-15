@@ -20,10 +20,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
-import com.example.thesamespace.gmble_zeng.login.LogInActivity;
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -84,14 +83,26 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
             });
         }
     };
-    private String[] BLENames = new String[]{"MAGICWISE00005", "MAGICWISE00006", "MAGICWISE00007"};
+    private String[] ourBLEList = new String[]{"SHELF01", "SHELF02", "SHELF03", "SHELF04"};
+    private String[] ourBLEList2 = new String[]{"MAGICWISE00005", "MAGICWISE00006", "MAGICWISE00007"};
+    private HashMap<String, String> nameList = new HashMap();
     private MyLeScaner myLeScaner = new MyLeScaner() {
         @Override
         protected void mOnLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (device.getName().equals(BLENames[0]) || device.getName().equals(BLENames[1]) || device.getName().equals(BLENames[2])) {
-                addBLEData(device.getName(), rssi);
-                showNearestBLE();
+            boolean isOurBLE = false;
+            for (String bleName : ourBLEList2) {
+                if (bleName.equals(device.getName())) {
+                    isOurBLE = true;
+                    break;
+                }
             }
+
+            if (!isOurBLE) {
+                return;
+            }
+
+            addBLEData(device.getName(), rssi);
+            showNearestBLE();
         }
 
         @Override
@@ -99,7 +110,7 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    tv_mainLog.append("\n" + str);
+                    tv_mainLog.append(str);
                 }
             });
         }
@@ -112,6 +123,13 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         setContentView(R.layout.activity_main);
         settingData = (SettingData) getApplication();
         initView();
+        nameList.put("SHELF01", "Zone 01");
+        nameList.put("SHELF02", "Zone 02");
+        nameList.put("SHELF03", "Zone 03");
+        nameList.put("SHELF04", "Zone 04");
+        nameList.put("MAGICWISE00005", "Zone 05");
+        nameList.put("MAGICWISE00006", "Zone 06");
+        nameList.put("MAGICWISE00007", "Zone 07");
     }
 
     private void initView() {
@@ -190,7 +208,7 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
         for (BLEData bleData : bleDataList) {
             if (bleData.bleName.equals(bleName)) {
                 isExit = true;
-                bleData.addRssiAVG(rssi);
+                bleData.updateRssiAVGList(rssi);
                 break;
             }
         }
@@ -201,42 +219,44 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
 
     private String getBLEListStr() {
         tempStr = "";
-        for (int i = 0; i < bleDataList.size(); i++) {
-            tempStr += String.format("\n%s", bleDataList.get(i).bleName);
+        for (BLEData bleData : bleDataList) {
+            tempStr += String.format("\n%s %f", bleData.bleName, bleData.lastRssiAVG);
         }
         return tempStr;
     }
 
     private void showNearestBLE() {
+        if (bleDataList.size() < 3) {
+            return;
+        }
+        Collections.sort(bleDataList);
+        float curMaxRssi = bleDataList.get(0).lastRssiAVG;
+        if (Math.abs(curMaxRssi - getLastMaxBLECurRssi(lastMaxBLE)) > 3) {
+            biggerTimes++;
+            if (biggerTimes >= settingData.getMiniBigerTimes()) {
+                biggerTimes = 0;
+                lastMaxBLE = bleDataList.get(0).bleName;
+            }
+        } else {
+            biggerTimes = 0;
+        }
+
+        if (lastMaxBLE.equals("")) {
+            return;
+        }
+
         if (!waitFlage) {
             waitFlage = true;
-            Collections.sort(bleDataList);
-            curMaxBLE = bleDataList.get(0).bleName;
-            getBLEListStr();
-            if (!curMaxBLE.equals(lastMaxBLE)) {
-                lastMaxBLE = curMaxBLE;
-                setPicThread(lastMaxBLE);
-                TimerTask timerTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        waitFlage = false;
-                    }
-                };
-                Timer timer = new Timer();
-                timer.schedule(timerTask, 2000);
-            }
+            setPicThread(lastMaxBLE);
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    waitFlage = false;
+                }
+            };
+            Timer timer = new Timer();
+            timer.schedule(timerTask, 2000);
         }
-//        float curMaxRssi = bleDataList.get(0).lastRssiAVG;
-//
-//        if (Math.abs(curMaxRssi - getLastMaxBLECurRssi(lastMaxBLE)) > 3) {
-//            biggerTimes++;
-//            if (biggerTimes >= settingData.getMiniBigerTimes()) {
-//                biggerTimes = 0;
-//                lastMaxBLE = bleDataList.get(0).bleName;
-//            }
-//        } else {
-//            biggerTimes = 0;
-//        }
     }
 
     private void setPicThread(final String blename) {
@@ -246,8 +266,7 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tv_curMaxBLE.setText(blename);
-                        tv_mainLog.setText(tempStr);
+                        tv_curMaxBLE.setText(nameList.get(blename));
                         Animation alphaAnimationIn = new AlphaAnimation(0f, 1.0f);
                         alphaAnimationIn.setDuration(2000);
                         Animation alphaAnimationOut = new AlphaAnimation(1.0f, 0f);
@@ -286,14 +305,17 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                 break;
             case "Jack":
                 switch (BLEname) {
-                    case "MAGICWISE00001":
-                        img_mainBackground.setImageResource(R.drawable.img21);
+                    case "SHELF01":
+                        img_mainBackground.setImageResource(R.drawable.img11);
                         break;
-                    case "MAGICWISE00002":
-                        img_mainBackground.setImageResource(R.drawable.img22);
+                    case "SHELF02":
+                        img_mainBackground.setImageResource(R.drawable.img12);
                         break;
-                    case "MAGICWISE00003":
-                        img_mainBackground.setImageResource(R.drawable.img23);
+                    case "SHELF03":
+                        img_mainBackground.setImageResource(R.drawable.img13);
+                        break;
+                    case "SHELF04":
+                        img_mainBackground.setImageResource(R.drawable.img14);
                         break;
                 }
                 break;
@@ -377,7 +399,6 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
                     public void run() {
                         img_mainBackground.setImageResource(R.drawable.magicwiselogo);
                         img_mainBackground.setAlpha(0.3f);
-//                        img_mainBackground.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     }
                 });
                 try {
@@ -410,7 +431,9 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
 
     @Override
     public View makeView() {
-        return new ImageView(this);
+        ImageView imageView = new ImageView(this);
+        imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+        return imageView;
     }
 
     private class BLEData implements Comparable<Object> {
@@ -423,17 +446,16 @@ public class MainActivity extends Activity implements NavigationView.OnNavigatio
 
         BLEData(String bleName, int rssi) {
             this.bleName = bleName;
-            addRssi(rssi);
-            addRssiAVG(rssi);
+            updateRssiList(rssi);
+            updateRssiAVGList(rssi);
         }
 
-        void addRssi(int rssi) {
+        void updateRssiList(int rssi) {
             rssiList.add(rssi);
-
         }
 
-        void addRssiAVG(int rssi) {
-            lastRssiAVG = (rssi - lastRssiAVG) * 0.1f;
+        void updateRssiAVGList(int rssi) {
+            lastRssiAVG += (rssi - lastRssiAVG) * 0.1f;
             rssiAVGList.add(lastRssiAVG);
         }
 

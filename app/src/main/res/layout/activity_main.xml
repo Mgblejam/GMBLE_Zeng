@@ -76,7 +76,8 @@
                         android:id="@+id/tv_mainLog"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Log:" />
+                        android:text="Log:"
+                        android:visibility="gone" />
                 </ScrollView>
             </LinearLayout>
         </LinearLayout>
@@ -84,10 +85,12 @@
         <TextView
             android:id="@+id/tv_curMaxBLE"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:text="BLE Name"
+            android:layout_height="110dp"
             android:gravity="center"
-            android:textSize="70sp" />
+            android:textSize="70sp"
+            android:alpha="0.3"
+            android:textColor="#d8d7d7"
+            android:text="Zone 00" />
     </FrameLayout>
 
     <android.support.design.widget.NavigationView

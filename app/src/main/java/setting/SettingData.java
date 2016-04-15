@@ -12,7 +12,7 @@ public class SettingData extends Application {
     private String IP = "127.0.0.1";
     private int port = 9999;
     private int timeOut = 3000;
-    private int miniBigerTimes = 3;
+    private int miniBigerTimes = 10;
 
     @Override
     public void onCreate() {
